@@ -9,6 +9,9 @@
 - **台词与口型硬约束**：强制逐字复用台词，绑定到具体镜头，确保声画同步。
 - **动态编译 System Prompt**：根据用户表单动态拼接极高精度的 H3 六段式提示词指令。
 
+<img width="2171" height="1107" alt="屏幕截图 2026-10-10 164020" src="https://github.com/user-attachments/assets/16300a32-c2ec-4a30-91e6-bc0a9a4d2907" />
+<img width="2172" height="1248" alt="屏幕截图 2026-10-10 164041" src="https://github.com/user-attachments/assets/d9a6ba5a-4752-43d2-887f-91819dd0cee1" />
+
 ## 🚀 如何使用
 1. 下载仓库中的 `H3提示词工作台.html` 文件。
 2. 双击用 Chrome / Edge 等现代浏览器打开即可，**无需安装任何环境**。
