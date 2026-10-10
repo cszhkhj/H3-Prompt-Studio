@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>H3 提示词工作台</title>
+<style>
+:root{
+  --bg:#f7f7f5; --panel:#ffffff; --line:#e3e2dd; --line2:#d0cfc8;
+  --tx:#2c2c2a; --tx2:#5f5e5a; --tx3:#8b8a84;
+  --acc:#0f6e56; --acc-bg:#e1f5ee; --acc-line:#1d9e75;
+  --warn:#854f0b; --warn-bg:#faeeda; --warn-line:#ba7517;
+  --err:#a32d2d; --err-bg:#fcebeb; --err-line:#e24b4a;
+  --info:#185fa5; --info-bg:#e6f1fb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:12px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{font-size:15px;font-weight:500;margin:0}
+.sub{font-size:12px;color:var(--tx3)}
+.spacer{flex:1}
+button{font:13px inherit;padding:6px 12px;border:1px solid var(--line2);background:var(--panel);color:var(--tx);border-radius:6px;cursor:pointer}
+button:hover{border-color:var(--acc-line);color:var(--acc)}
+button.primary{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.primary:hover{background:#0c5c48;color:#fff}
+button.sm{padding:3px 8px;font-size:12px}
+select,input,textarea{font:13px inherit;padding:6px 8px;border:1px solid var(--line2);border-radius:6px;background:var(--panel);color:var(--tx);width:100%}
+textarea{resize:vertical;line-height:1.55;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+label{display:block;font-size:12px;color:var(--tx2);margin:0 0 3px}
+.wrap{padding:14px 18px;max-width:1180px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.card>h2{font-size:13px;font-weight:500;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.card>h2 .tag{font-size:11px;font-weight:400;color:var(--tx3);border:1px solid var(--line2);border-radius:4px;padding:1px 5px}
+.row{display:grid;gap:8px;margin-bottom:9px}
+.r2{grid-template-columns:1fr 1fr}
+.r3{grid-template-columns:1fr 1fr 1fr}
+.r4{grid-template-columns:1fr 1fr 1fr 1fr}
+.hint{font-size:11px;color:var(--tx3);margin-top:2px}
+.route{background:var(--acc-bg);border:1px solid var(--acc-line);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.route .big{font-size:14px;font-weight:500;color:#0f6e56}
+.route .why{font-size:12px;color:#0f6e56;margin-top:3px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{padding:5px 11px;border:1px solid var(--line2);border-radius:20px;cursor:pointer;font-size:12px;background:var(--panel)}
+.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.item{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;background:#fcfcfb}
+.item .hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.item .hd b{font-size:12px;font-weight:500}
+.msg{border-radius:6px;padding:7px 10px;margin-bottom:6px;font-size:12px;border:1px solid}
+.msg.e{background:var(--err-bg);border-color:var(--err-line);color:var(--err)}
+.msg.w{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
+.msg.i{background:var(--info-bg);border-color:#85b7eb;color:var(--info)}
+.msg b{font-weight:500}
+.out{background:#fcfcfb;border:1px solid var(--line);border-radius:8px;padding:12px;font-family:ui-monospace,Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-word;max-height:520px;overflow:auto;line-height:1.6}
+.tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.tab{padding:6px 12px;cursor:pointer;font-size:12px;border-bottom:2px solid transparent;color:var(--tx2)}
+.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.meter{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin:6px 0}
+.meter i{display:block;height:100%;background:var(--acc-line)}
+.tabs.inline{display:inline-flex;margin:0 0 0 10px;border-bottom:none;vertical-align:middle}
+.ck{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);margin-bottom:5px}
+.ck input{width:auto}
+.sec{display:none}.sec.on{display:block}
+.mini{font-size:11px;color:var(--tx3)}
+kbd{font:11px ui-monospace,Consolas,monospace;background:var(--bg);border:1px solid var(--line2);border-radius:3px;padding:1px 4px}
+.subtag{font-size:11px;font-weight:500;color:var(--acc);margin:12px 0 6px;display:flex;align-items:center;gap:7px}
+.subtag:before{content:"";width:3px;height:12px;border-radius:2px;background:var(--acc-line)}
+.subtag .n{font-weight:400;color:var(--tx3)}
+.pill{padding:4px 10px;border:1px solid var(--line2);border-radius:20px;cursor:pointer;font-size:12px;background:var(--panel);white-space:nowrap}
+.pill.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.pill:hover{border-color:var(--acc-line)}
+table.pl{width:100%;border-collapse:collapse}
+table.pl th{font-size:11px;font-weight:500;color:var(--tx3);text-align:left;padding:4px 5px;border-bottom:1px solid var(--line2);white-space:nowrap}
+table.pl td{padding:3px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.pl td.idx{font:11px ui-monospace,Consolas,monospace;color:var(--tx3);white-space:nowrap;padding-right:6px}
+table.pl select,table.pl input{font-size:12px;padding:4px 5px}
+table.pl textarea{font-size:12px;padding:4px 6px;min-height:34px}
+.dlg{display:grid;gap:6px;grid-template-columns:2fr 1.1fr 76px 26px;align-items:center;margin-bottom:5px}
+.dlg input{width:100%}
+.h3tip{background:var(--info-bg);border:1px solid #85b7eb;border-radius:6px;padding:6px 9px;font-size:11px;color:var(--info);line-height:1.7;margin-bottom:9px}
+.badge{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);margin-left:5px;font-weight:400}
+.badge.ok{background:var(--acc-bg);border-color:var(--acc-line);color:var(--acc)}
+.steps{background:var(--acc-bg);border:1px solid var(--acc-line);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#0f6e56;line-height:1.75}
+.steps b{font-weight:500}
+.steps .flow{font-weight:500}
+.steps .flow i{font-style:normal;color:var(--tx3);font-weight:400}
+.subtag .stp{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:9px;background:var(--acc);color:#fff;font-size:11px;font-weight:500;padding:0 4px}
+tr.na td{opacity:.4}
+td.segcell{white-space:nowrap}
+</style>
+</head>
+<body>
+<header>
+  <h1>H3 提示词工作台</h1>
+  <span class="sub">MiniMax H3 · 本地开源权重 · 离线可用</span>
+  <div class="spacer"></div>
+  <button onclick="saveProj()">保存项目</button>
+  <button onclick="loadProj()">读取项目</button>
+  <button onclick="saveLocal()" title="把全部内容（含已生成的提示词段落）保存为你自选路径的本地文件">保存到本地</button>
+  <button onclick="loadLocal()" title="从本地文件读取之前保存的全部内容">读取本地</button>
+  <button onclick="expJSON()">导出 JSON</button>
+  <button onclick="impJSON()">导入</button>
+  <button onclick="resetAll()">清空</button>
+</header>
+
+<div class="wrap">
+<div>
+
+  <div class="card">
+    <h2>1 · 模式路由 <span class="tag">先定权重，再写词</span></h2>
+    <div class="route">
+      <div class="big" id="routeOut">模型权重：FL2VA ｜ 任务模式：T2VA</div>
+      <div class="why" id="routeWhy">纯文字输入，无参考素材。</div>
+    </div>
+    <label>你的素材构成（决定权重与任务模式）</label>
+    <div class="chips" id="matChips">
+      <div class="chip on" data-m="none">纯文字</div>
+      <div class="chip" data-m="first">一张首帧图</div>
+      <div class="chip" data-m="last">一张尾帧图</div>
+      <div class="chip" data-m="both">首尾两张帧</div>
+      <div class="chip" data-m="refimg">参考图（人物/风格/场景）</div>
+      <div class="chip" data-m="refvid">参考视频 / 待编辑源</div>
+      <div class="chip" data-m="refaud">参考音频</div>
+    </div>
+    <div class="row r2">
+      <div><label>生成时长（秒）</label><select id="duration"></select></div>
+      <div><label>画幅</label><select id="aspect" onchange="S.aspect=this.value">
+        <option value="16:9">16:9 横屏</option><option value="9:16">9:16 竖屏</option><option value="1:1">1:1 方形</option>
+        <option value="4:3">4:3 横屏</option><option value="3:4">3:4 竖屏</option><option value="21:9">21:9 超宽银幕</option>
+      </select></div>
+    </div>
+    <div class="row r2">
+      <div><label>权重预设（你的 checkpoint）</label><select id="ckpt" onchange="S.ckpt=this.value">
+        <option value="fl2va" title="minimax_h3_fl2va_pruned_int8_convrot">FL2VA 剪枝权重（首尾帧 / 通用）</option>
+        <option value="ref" title="minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot">Ref2VA turbo8 参考权重（8 步加速）</option>
+        <option value="other">其他 / 自定义权重</option>
+      </select></div>
+      <div><label>本地服务地址（自动填好，可改）</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="apiUrl" value="http://127.0.0.1:8080/v1" oninput="S.apiUrl=this.value" style="flex:1">
+          <span class="mini" style="white-space:nowrap">模型 <b>QweN3.6_35B</b></span>
+        </div>
+        <input id="modelId" type="hidden">
+        <div style="margin-top:6px"><button class="sm" onclick="testConn()">测试连接</button>
+        <span class="mini" id="connInfo"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2 · 提示词生成
+      <span class="tabs inline">
+        <span class="tab on" data-w="brief" onclick="wTab('brief')">一句话生成</span>
+        <span class="tab" data-w="multi" onclick="wTab('multi')">多段提示词</span>
+      </span>
+    </h2>
+
+
+    <div id="paneBrief" style="display:none">
+      <label>用大白话写需求，笼统或详细都行</label>
+      <textarea id="briefText" rows="6" oninput="S.brief=this.value" placeholder="详细：雨夜公交站，一个穿深色大衣的女人收起黑伞，抬头看向驶来的公交车，镜头缓缓推近，5 秒，环境声是雨声和引擎声。&#10;笼统：赛博朋克街头，孤独感，一个人走在霓虹里"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+        <button class="primary" onclick="genFromBrief()" id="genBtn">生成完整提示词</button>
+        <span class="mini" id="genInfo"></span>
+      </div>
+      <div id="briefOutWrap" style="display:none;margin-top:10px">
+        <label>生成结果（可直接复制）</label>
+        <textarea id="briefOut" rows="12" readonly style="font:12px ui-monospace,Consolas,monospace"></textarea>
+        <div style="margin-top:6px"><button class="sm" onclick="copyBrief()">复制</button></div>
+      </div>
+    </div>
+
+    <div id="paneMulti" style="display:none">
+
+      <div class="subtag"><span class="stp">1</span> 要拍什么</div>
+      <label>整体需求（一句话，笼统或详细都行）</label>
+      <textarea id="multiBrief" rows="3" oninput="S.multiBrief=this.value;calcSplit()"
+        placeholder="女孩在落地窗前跳现代舞，情绪由内敛逐渐释放，自然光"></textarea>
+      <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap">
+        <button class="sm" onclick="pickBriefImg()">上传图片识别</button>
+        <span class="mini" id="imgInfo"></span>
+      </div>
+      <div id="imgPrevWrap" style="display:none;margin-top:6px;align-items:center;gap:8px">
+        <img id="imgPrev" style="max-height:110px;border-radius:6px;border:1px solid var(--line2)" alt="识别中预览">
+      </div>
+
+      <div class="row r2" style="margin-top:10px">
+        <div><label>每段时长（秒，上限 15）</label>
+          <select id="multiSeg" onchange="calcSplit()">
+            <option value="8">8 秒</option>
+            <option value="10" selected>10 秒（推荐）</option>
+            <option value="12">12 秒</option>
+            <option value="15">15 秒（上限）</option>
+            <option value="6">6 秒</option>
+          </select></div>
+        <div><label>累计进度</label><div id="multiPlan" class="mini" style="padding-top:6px">—</div></div>
+      </div>
+
+      <div class="row r2" style="margin-top:10px">
+        <div><label>参考图张数（自动统计，不用填）</label>
+          <div id="multiPicCount" class="mini" style="padding-top:6px">—</div></div>
+      </div>
+      <label style="margin-top:10px">每张参考图是什么（一行写一张，可空；留空则由模型按需求推断）</label>
+      <textarea id="multiPicNote" rows="2" oninput="S.multiPicNote=this.value;renderMultiList()"
+        placeholder="第 1 张：人物全身正面照，冷白皮、黑长直发&#10;第 2 张：国风室内场景，落地窗与自然光"></textarea>
+
+      <div class="subtag"><span class="stp">2</span> 锁住身份与全片状态</div>
+      <div class="row r2" style="margin-top:10px">
+        <div><label>主体锚定句式（&lt;Subject 1&gt; 定义行 + retention_analysis 双锚定）</label>
+          <select id="multiWear" onchange="pickWear()">
+            <option value="none">不使用</option>
+            <option value="cloth">服装标签</option>
+            <option value="suit">紧身衣标签</option>
+          </select></div>
+        <div><label>把当前句式存为预设</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:4px">
+            <button class="sm" onclick="saveWear('cloth')">存为「服装」</button>
+            <button class="sm" onclick="saveWear('suit')">存为「紧身衣」</button>
+            <button class="sm" onclick="clearWear()">清空</button>
+          </div></div>
+      </div>
+      <textarea id="multiWearText" rows="3" oninput="S.multiWearText=this.value"
+        placeholder="留空则模型自由写；填入后，每一段 subject_definitions 的 <Subject 1> 与 retention_analysis 的 <Subject 1> 行都会同时钉住这句"></textarea>
+
+      <div class="row r2" style="margin-top:12px">
+        <div><label>状态锚定卡 · 人物（&lt;Subject 1&gt; 状态，上限 250 字）</label>
+          <textarea id="anchChar" rows="4" maxlength="250" oninput="anchIn('char',this)"
+            placeholder="女巨人立于都市中心，紧身战衣，冷白皮肤；胸杯裁片切除消失露出胸部，裆插片消失露出阴户；其余（四肢、背部、手腕脚踝、腰胯侧）完整覆盖"></textarea>
+          <div class="mini" id="cntChar">0 / 250</div></div>
+        <div><label>状态锚定卡 · 场景（&lt;Subject 2&gt; 环境与光线，上限 500 字）</label>
+          <textarea id="anchScene" rows="4" maxlength="500" oninput="anchIn('scene',this)"
+            placeholder="高楼林立的现代都市，乌云黄昏；云层漫过巨人肩胸，摩天大楼仅及腰部；电影级打光，细腻柔和，冷调"></textarea>
+          <div class="mini" id="cntScene">0 / 500</div></div>
+      </div>
+      <label style="margin-top:8px">持续状态（&lt;Subject 3&gt; · 贯穿全片的动作或状态序列，可空，上限 250 字）</label>
+      <textarea id="anchState" rows="2" maxlength="250" oninput="anchIn('state',this)"
+        placeholder="贯穿全片的持续高潮序列，伴随全身震颤、痉挛、发声与液体喷发，节奏收紧与放松交替"></textarea>
+      <div class="mini" id="cntState">0 / 250</div>
+      <div class="row r3" style="margin-top:8px">
+        <div><label>运镜方式</label><select id="anchCam" onchange="S.anchorCam=this.value">
+          <option value="">（不指定）</option>
+          <option value="推近">推近 · Push In</option><option value="拉远">拉远 · Pull Out</option>
+          <option value="变焦推近">变焦推近 · Zoom In</option><option value="变焦拉远">变焦拉远 · Zoom Out</option>
+          <option value="左摇">左摇 · Pan Left</option><option value="右摇">右摇 · Pan Right</option>
+          <option value="左横移">左横移 · Truck Left</option><option value="右横移">右横移 · Truck Right</option>
+          <option value="上摇">上摇 · Tilt Up</option><option value="下摇">下摇 · Tilt Down</option>
+          <option value="升镜">升镜 · Pedestal Up</option><option value="降镜">降镜 · Pedestal Down</option>
+          <option value="弧形环绕">弧形环绕 · Arc Shot</option><option value="跟踪跟拍">跟踪跟拍 · Tracking Shot</option>
+          <option value="轻微抖动">轻微抖动 · Shake Slightly</option><option value="主观视角">主观视角 · POV</option>
+          <option value="顺时针滚转">顺时针滚转 · Roll CW</option><option value="逆时针滚转">逆时针滚转 · Roll CCW</option>
+        </select></div>
+        <div><label>拍摄距离</label><select id="anchDist" onchange="S.anchorDist=this.value">
+          <option value="">（不指定）</option>
+          <option value="极端远景">极端远景</option><option value="远景">远景</option>
+          <option value="全景">全景</option><option value="中全景">中全景</option>
+          <option value="中景">中景</option><option value="近景">近景</option>
+          <option value="特写">特写</option><option value="大特写">大特写</option>
+          <option value="极端特写">极端特写</option>
+        </select></div>
+        <div><label>镜头是否固定</label><select id="anchFix" onchange="S.anchorFix=this.value">
+          <option value="">（不指定）</option>
+          <option value="固定机位">固定机位，全段不变</option>
+          <option value="段内可变化">段内可变化</option>
+        </select></div>
+      </div>
+
+      <div class="subtag"><span class="stp">3</span> 排本段镜头</div>
+      <div class="row r3">
+        <div><label>本段镜头数</label><select id="shotCount" onchange="setShotCount(this.value)"></select></div>
+        <div><label>分镜策略</label><select id="shotMode" onchange="S.shotMode=this.value;applyShotMode()">
+          <option value="even">平均切分（每镜等长，推荐）</option>
+          <option value="manual">手动指定时间点</option>
+          <option value="fixed">固定机位单镜到底（只 1 镜）</option>
+          <option value="free">自由（只给约束，模型自行编排）</option>
+        </select></div>
+        <div><label>全段运镜基调（可空）</label><select id="shotCamBase" onchange="S.shotCamBase=this.value">
+          <option value="">（不指定）</option>
+          <option value="以推近为主">以推近为主 · 情绪收紧</option>
+          <option value="以拉远为主">以拉远为主 · 情绪释放</option>
+          <option value="以左右横移为主">以左右横移为主 · 平稳铺陈</option>
+          <option value="以手持晃动为主">以手持晃动为主 · 纪实紧张</option>
+          <option value="以弧形环绕为主">以弧形环绕为主 · 立体展示</option>
+          <option value="以固定机位为主">以固定机位为主 · 冷静克制</option>
+        </select></div>
+      </div>
+      <div class="row r2">
+        <div><label>镜头间转场</label><select id="shotTrans" onchange="S.shotTrans=this.value">
+          <option value="">（不指定）</option>
+          <option value="硬切">硬切 · Hard Cut</option>
+          <option value="叠化">叠化 · Cross Dissolve</option>
+          <option value="渐隐渐显">渐隐渐显 · Fade</option>
+          <option value="匹配剪辑">匹配剪辑 · Match Cut</option>
+          <option value="无明显剪辑">无明显剪辑（长镜头内做景别变化）</option>
+        </select></div>
+        <div><label>末镜收尾要求</label><select id="shotEnd" onchange="S.shotEnd=this.value">
+          <option value="">（默认）以定格状态收尾，供下一段接戏</option>
+          <option value="必须正对镜头">末镜正对镜头（便于下一段正面起手）</option>
+          <option value="必须留出肩后空间">末镜留出肩后空间（与下一段主体呼应）</option>
+          <option value="保持运动">末镜保持运动（动作延续到下一段）</option>
+        </select></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 6px;align-items:center">
+        <button class="sm" onclick="addShotRow()">+ 加一个镜头</button>
+        <button class="sm" onclick="addShotRow(3)">+ 加一组镜组（A / B / C）</button>
+        <button class="sm" onclick="applyShotMode()">按策略重排时间点</button>
+        <button class="sm" onclick="clearShots()">清空镜头表</button>
+        <span class="mini" id="shotInfo"></span>
+      </div>
+      <div style="overflow-x:auto"><table class="pl" id="shotTable"></table></div>
+
+      <div class="subtag"><span class="stp">4</span> 写台词</div>
+      <div class="row r3">
+        <div><label>说话人（整栏默认值，每句可单独覆盖）</label><select id="dSpk" onchange="S.dialogueSpeaker=this.value;renderLines()">
+          <option value="auto">自动（由模型按剧情判断）</option>
+          <option value="s1">已登记主体（&lt;Subject 1&gt;）</option>
+          <option value="custom">自定义说话人</option>
+          <option value="off">旁白 / 画外解说人</option>
+        </select></div>
+        <div><label>自定义说话人（上面选「自定义」才生效）</label><input id="dSpkName" placeholder="如：戴面具的男人" oninput="S.dialogueSpeakerName=this.value;renderLines()"></div>
+        <div><label>台词语言</label><select id="dLang" onchange="S.dialogueLang=this.value">
+          <option value="zh">中文普通话（当前只支持中文）</option>
+          <option value="zh-dial">中文方言腔调（需在台词文本里写明腔调）</option>
+        </select></div>
+      </div>
+      <label class="ck"><input type="checkbox" id="dAlign" onchange="S.shotAlign=this.checked;renderLines()"> 台词必须落在所指定的镜头内（勾上＝强制只在该镜；取消＝「尽量」，允许模型微调位置）</label>
+
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 6px;align-items:center">
+        <button class="sm" onclick="addLine()">+ 加一句台词</button>
+        <button class="sm" onclick="addLineVoice()">+ 单加一句画外音</button>
+        <button class="sm" onclick="autoPlaceLines()">按镜头归属自动排时间点</button>
+        <button class="sm" onclick="clearLines()">清空台词</button>
+        <span class="mini" id="lineInfo"></span>
+      </div>
+      <div id="lineList" style="overflow-x:auto"></div>
+      <div class="row r2" style="margin-top:8px">
+        <div><label>台词之外的声音补充（可空，只对本段生效）</label>
+          <textarea id="dNote" rows="2" oninput="S.dialogueNote=this.value" placeholder="如：喘息逐渐加重，中间夹一次吞咽；环境声是雨与远处车流"></textarea></div>
+        <div><label>台词在各段的分布（生成某段时只注入属于它的句子）</label>
+          <div id="lineDist" class="mini" style="padding-top:6px">—</div></div>
+      </div>
+
+      <div class="hint" id="multiAdvice"></div>
+
+      <div class="subtag"><span class="stp">5</span> 生成这一段</div>
+      <div style="display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;align-items:center">
+        <button class="primary" onclick="genNextSeg()" id="multiBtn">生成第 1 段</button>
+        <button onclick="stopMulti()" id="multiStop" disabled>中断</button>
+        <button onclick="clearSegs()">清空段落</button>
+        <span class="mini" id="multiInfo"></span>
+      </div>
+      <div class="hint" id="multiWarn" style="color:var(--warn)"></div>
+      <div id="multiList"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>4 · 资源 <span class="tag">RTX 5090 24GB ｜ 内存 32GB</span></h2>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="primary" onclick="unloadModel()">释放 llama 显存</button>
+      <button onclick="refreshRes()">刷新状态</button>
+      <button onclick="copyScriptPath()">复制脚本路径</button>
+      <button onclick="clearCache()">清工作台缓存</button>
+    </div>
+    <div class="mini" id="resInfo" style="margin-top:8px"></div>
+  </div>
+</div>
+</div>
+
+<script>
+var DEF_MODEL="QweN3.6_35B";
+
+var CKPT_FL2VA="minimax_h3_fl2va_pruned_int8_convrot";
+var CKPT_REF="minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot";
+
+/* ===== 台词锚定 · 枚举 ===== */
+var L_EMO=[["","（不指定）"],["平静","平静"],["温柔","温柔"],["压抑","压抑"],
+  ["委屈","委屈"],["低语","低语"],["颤抖","颤抖"],["恐惧","恐惧"],
+  ["难过","难过"],["哭腔","哭腔"],["苦笑","苦笑"],["愤怒","愤怒"],["爆发","爆发"],
+  ["欢愉","欢愉"],["虚弱","虚弱"],["魅惑","魅惑"],["痛苦","痛苦"],
+  ["失神","失神"],["哽咽","哽咽"],["急促","急促"],["慵懒","慵懒"],["冷淡","冷淡"]];
+var L_VOICE=[["","（不指定）"],["气声呢喃","气声呢喃 · 极轻"],["轻声细语","轻声细语"],
+  ["低声呻吟","低声呻吟"],["呻吟","呻吟 · 持续"],["喘息","喘息 · 断续"],
+  ["娇喘","娇喘"],["呻吟渐强","呻吟渐强（由轻到重）"],
+  ["正常说话","正常说话"],["提高音量","提高音量"],["喊叫","喊叫"],
+  ["撕心裂肺地喊","撕心裂肺地喊"],["嘶吼","嘶吼 · 极限强度"],
+  ["哭喊","哭喊"],["破音","破音（声带撕扯）"],["无声","无声（只有口型）"]];
+var L_KIND=[["line","对白（画面内说话）"],["mono","独白（内心/自语）"],
+  ["voiceover","画外音 VO（不在画面里）"],["moan","呻吟 / 喘息"],
+  ["scream","嘶吼 / 喊叫"],["cry","哭腔"],["breath","呼吸声 / 气声"]];
+var L_WHOHEAD={auto:"说话人由模型按剧情判断",s1:"说话人为 <Subject 1>",custom:"说话人",off:"画外解说人"};
+var L_STATE=[["","（不指定）"],["连贯说完","连贯，一句说完"],["说到一半停住","说到一半停住"],
+  ["逐渐减弱","逐渐减弱到消失"],["逐渐加强","逐渐加强到爆发"],["被打断","被中断 / 被压过去"]];
+
+/* ===== 镜头规划 · 枚举 ===== */
+var SHOT_CAM=[["","（不指定）"],["推近","推近 · Push In"],["拉远","拉远 · Pull Out"],
+  ["变焦推近","变焦推近 · Zoom In"],["变焦拉远","变焦拉远 · Zoom Out"],
+  ["左摇","左摇 · Pan Left"],["右摇","右摇 · Pan Right"],
+  ["左横移","左横移 · Truck Left"],["右横移","右横移 · Truck Right"],
+  ["上摇","上摇 · Tilt Up"],["下摇","下摇 · Tilt Down"],
+  ["升镜","升镜 · Pedestal Up"],["降镜","降镜 · Pedestal Down"],
+  ["弧形环绕","弧形环绕 · Arc Shot"],["跟踪跟拍","跟踪跟拍 · Tracking"],
+  ["手持跟随","手持跟随 · Handheld"],["轻微抖动","轻微抖动 · Shake Slightly"],
+  ["主观视角","主观视角 · POV"],["顺时针滚转","顺时针滚转 · Roll CW"],
+  ["逆时针滚转","逆时针滚转 · Roll CCW"],["固定","固定机位 · Static"]];
+var SHOT_DIST=[["","（不指定）"],["极端远景","极端远景"],["远景","远景"],["全景","全景"],
+  ["中全景","中全景"],["中景","中景"],["近景","近景"],["特写","特写"],
+  ["大特写","大特写"],["极端特写","极端特写"]];
+var SHOT_WHO=[["","（不指定）"],["s1","<Subject 1>"],["s2","<Subject 2>"],
+  ["s3","<Subject 3>"],["multi","多主体同框"],["env","环境为主，画面内无人"],
+  ["pov","主观视角"]];
+var SHOT_TRANS=[["","（不指定）"],["硬切","硬切 · Cut"],["叠化","叠化 · Dissolve"],
+  ["渐隐渐显","渐隐渐显 · Fade"],["匹配剪辑","匹配剪辑 · Match Cut"]];
+
+function labelOf(list,v){
+  for(var i=0;i<list.length;i++){if(list[i][0]===v)return list[i][1];}
+  return v||"";
+}
+
+var S={work:"brief",mat:"none",duration:5,aspect:"16:9",ckpt:"fl2va",apiUrl:"http://127.0.0.1:8080/v1",modelId:"",
+  brief:"",briefOut:"",
+  multiBrief:"",multiSeg:"10",multiSegs:[],multiPicNote:"",
+  multiWear:"none",multiWearText:"",wearPreset:{cloth:"",suit:""},
+  anchChar:"",anchScene:"",anchState:"",anchorCam:"",anchorDist:"",anchorFix:"",
+  dialogueLang:"zh",dialogueSpeaker:"auto",dialogueSpeakerName:"",dialogueNote:"",
+  lines:[],
+  shotCount:0,shotPlan:[],shotMode:"even",shotCamBase:"",shotTrans:"",shotEnd:"",shotAlign:true};
+
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function $(id){return document.getElementById(id);}
+function syncChips(){
+  var all=document.querySelectorAll("#matChips .chip");
+  for(var i=0;i<all.length;i++)all[i].classList.toggle("on",all[i].dataset.m===S.mat);
+}
+function pickMat(m){
+  S.mat=m;syncChips();route();
+}
+function wTab(k){
+  S.work=k;
+  var map={brief:"paneBrief",multi:"paneMulti"};
+  for(var key in map){var e=$(map[key]);if(e)e.style.display=(key===k?"":"none");}
+  var ts=document.querySelectorAll("[data-w]");
+  for(var i=0;i<ts.length;i++)ts[i].classList.toggle("on",ts[i].getAttribute("data-w")===k);
+  var w=$("multiWarn");
+  if(k==="multi"){
+    if(S.mat!=="refimg"&&S.mat!=="refvid"&&S.mat!=="refaud"){S.matPrev=S.mat;pickMat("refimg");}
+    if(w)w.innerHTML="已自动切到 <b>Ref2VA 参考模式</b>（权重预设同步为 Ref2VA turbo8）。多段长视频必须有参考素材锚定身份，否则跨段会换人 —— 请在 ① 的「每张参考图是什么」里一行写清每张图的内容（也可用「上传图片识别」让视觉模型代写）。";
+  }else{
+    if(S.matPrev){pickMat(S.matPrev);S.matPrev="";}
+    if(w)w.innerHTML="";
+  }
+  if(k==="multi")renderMultiList();
+}
+
+function init(){
+  var d=$("duration");
+  for(var i=4;i<=15;i++){var o=document.createElement("option");o.value=i;o.text=i+" 秒";d.appendChild(o);}
+  d.value=S.duration||5;
+  d.onchange=function(){S.duration=+d.value;};
+  $("aspect").value=S.aspect||"16:9";
+  $("ckpt").value=S.ckpt||"fl2va";
+  $("apiUrl").value=S.apiUrl||"http://127.0.0.1:8080/v1";
+  $("briefText").value=S.brief||"";
+  $("briefOut").value=S.briefOut||"";
+  $("briefOutWrap").style.display=S.briefOut?"":"none";
+  var cs=document.querySelectorAll("#matChips .chip");
+  for(var j=0;j<cs.length;j++){cs[j].onclick=function(){pickMat(this.dataset.m);};}
+  $("multiBrief").value=S.multiBrief||"";$("multiSeg").value=S.multiSeg||"10";
+  $("multiPicNote").value=S.multiPicNote||"";
+  if(!S.wearPreset)S.wearPreset={cloth:"",suit:""};
+  $("multiWear").value=S.multiWear||"none";$("multiWearText").value=S.multiWearText||"";
+  loadAnchor();
+  initShotCount();
+  loadDialogue();
+  if(!S.shotPlan)S.shotPlan=[];
+  if(S.shotAlign===undefined)S.shotAlign=true;
+  sanitizeLines();
+  if(S.multiSegs&&S.multiSegs.length){for(var mi=0;mi<S.multiSegs.length;mi++){if(S.multiSegs[mi].st==="run")S.multiSegs[mi].st="wait";}}
+  syncChips();route();calcSplit();renderMultiList();renderShotPlan();renderLines();
+  wTab(S.work==="multi"?"multi":"brief");
+}
+
+function route(){
+  var m=S.mat,w,t,why;
+  if(m==="none"){w="FL2VA";t="T2VA";why="纯文字输入，从文本直接构建完整时间线。";}
+  else if(m==="first"){w="FL2VA";t="I2VA";why="图片被指定为视频第 0 秒首帧，需要从该帧向后连续生成。";}
+  else if(m==="last"){w="FL2VA";t="L2VA";why="图片只锚定视频最后一帧，需推断前置状态并收敛到该帧。";}
+  else if(m==="both"){w="FL2VA";t="FL2VA";why="两张图片分别锚定首帧与尾帧，描述两者之间的连续路径。";}
+  else {w="Ref2VA";t="Ref2VA";why="素材承担参考职责（人物/风格/场景/动作/音色），不是具体起止帧。";}
+  S.weight=w;S.task=t;
+  $("routeOut").textContent="模型权重："+w+" ｜ 任务模式："+t;
+  $("routeWhy").textContent=why;
+  var sel=$("ckpt");
+  if(w==="Ref2VA"&&S.ckpt==="fl2va"){sel.value="ref";S.ckpt="ref";}
+  else if(w!=="Ref2VA"&&S.ckpt==="ref"){sel.value="fl2va";S.ckpt="fl2va";}
+}
+
+function opts(pairs,cur){var h="";for(var i=0;i<pairs.length;i++){var v=pairs[i][0],t=pairs[i][1];h+='<option value="'+esc(v)+'"'+(v===cur?" selected":"")+'>'+esc(t)+'</option>';}return h;}
+
+var CLEAN_SCRIPT="D:\\Ai\\WB\\free-vram.bat";
+function copyScriptPath(){cp(CLEAN_SCRIPT);$("resInfo").textContent="已复制："+CLEAN_SCRIPT+" （粘贴到资源管理器地址栏回车即可运行）";}
+function llamaBase(){var u=($("apiUrl").value||"").trim();if(!u)return "";u=u.replace(/\/+$/,"");return u.replace(/\/v1$/,"");}
+function refreshRes(){
+  var b=llamaBase(),info=$("resInfo");
+  if(!b){info.innerHTML='<span style="color:var(--warn)">未填 llama 服务地址，查不到状态。</span>';return;}
+  info.textContent="查询中…";
+  fetch(b+"/v1/models").then(function(r){return r.text();}).then(function(t){
+    var j={};try{j=JSON.parse(t);}catch(e){throw new Error(t.slice(0,80));}
+    var st="?";(j.data||[]).forEach(function(m){if(m.id===DEF_MODEL&&m.status)st=m.status.value;});
+    if(st==="loaded")info.innerHTML='llama 模型 <b style="color:var(--err)">已加载</b> —— 占用约 21.4 GB 显存 + 20.4 GB 内存，点上方按钮可释放。';
+    else if(st==="unloaded")info.innerHTML='llama 模型 <b style="color:var(--acc)">未加载</b> —— 仅占 200 MB，无需清理。';
+    else info.textContent="llama 模型状态："+st;
+  }).catch(function(e){info.innerHTML='<span style="color:var(--warn)">查不到 llama 服务（未启动或地址不对）</span>';});
+}
+function unloadModel(){
+  var b=llamaBase();
+  if(!b){alert("先在上方「本地服务地址」填写 llama 服务地址，例如 http://127.0.0.1:8080/v1");return;}
+  $("resInfo").textContent="正在卸载…";
+  fetch(b+"/models/unload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:DEF_MODEL})})
+  .then(function(r){return r.text().then(function(t){return{s:r.status,t:t};});})
+  .then(function(o){
+    var ok=false;try{ok=JSON.parse(o.t).success;}catch(e){}
+    if(ok){
+      $("resInfo").innerHTML='已卸载 —— <b>约 21 GB 显存已回收</b>，llama 服务仍在运行，下次用 AI 会自动重载（约 30 秒）。';
+      flash("显存已释放");
+    }else if(o.t.indexOf("not running")>=0){
+      $("resInfo").textContent="模型本来就没加载，无需释放。";
+    }else{
+      $("resInfo").textContent="返回 "+o.s+"："+o.t.slice(0,120);
+    }
+  }).catch(function(e){
+    $("resInfo").innerHTML='<span style="color:var(--warn)">浏览器请求被拦截，请改用脚本：'+CLEAN_SCRIPT+'</span>';
+  });
+}
+function lsKB(){var n=0;try{for(var i=0;i<localStorage.length;i++){n+=(localStorage.getItem(localStorage.key(i))||"").length;}}catch(e){}return Math.round(n*2/1024);}
+function clearCache(){
+  S.brief="";var b=$("briefText");if(b)b.value="";
+  var k=lsKB();
+  $("resInfo").innerHTML="已清空「一句话生成」输入框。浏览器存档合计 "+k+" KB"+(k>200?"（偏大，可用顶部「清空」重置）":"")+"。";
+  flash("缓存已清");
+}
+function cp(t){navigator.clipboard.writeText(t).then(function(){flash("已复制");},function(){flash("复制失败，请手动选中");});}
+function flash(m){var b=document.activeElement;var o=b?b.textContent:"";if(b&&b.tagName==="BUTTON"){b.textContent=m;setTimeout(function(){b.textContent=o;},1200);}}
+
+function snapshot(){return JSON.stringify({v:1,S:S},null,1);}
+function saveProj(){localStorage.setItem("h3studio",snapshot());flash("已保存到浏览器");}
+function loadProj(){var d=localStorage.getItem("h3studio");if(!d){flash("没有存档");return;}apply(d);flash("已读取");}
+function expJSON(){dl("h3-prompt-"+Date.now()+".json",snapshot());}
+function impJSON(){var i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=function(){var f=i.files[0];if(!f)return;var r=new FileReader();r.onload=function(){apply(r.result);flash("已导入");};r.readAsText(f);};i.click();}
+function dl(name,txt){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"}));a.download=name;a.click();}
+
+/* ===== 保存到本地 / 读取本地（自选路径）===== */
+function saveLocal(){
+  var name="h3-prompt-"+(new Date()).toISOString().slice(0,10)+".json";
+  if(window.showSaveFilePicker){
+    window.showSaveFilePicker({suggestedName:name,types:[{description:"H3 工作台存档（JSON）",accept:{"application/json":[".json"]}}]})
+    .then(function(h){return h.createWritable();})
+    .then(function(w){return w.write(snapshot()).then(function(){return w.close();});})
+    .then(function(){
+      flash("已保存到本地");
+      var ri=$("resInfo");if(ri)ri.textContent="已把全部内容（含已生成的提示词段落）保存到你自选路径的本地文件，之后可用顶部「读取本地」原样读回。";
+    })
+    .catch(function(e){
+      if(e&&e.name==="AbortError")return;   // 用户取消保存框，不算错误
+      dl(name,snapshot());flash("浏览器限制自选路径，已改为下载存档");
+    });
+  }else{
+    dl(name,snapshot());flash("该浏览器不支持自选路径，已下载存档文件");
+  }
+}
+function loadLocal(){
+  if(window.showOpenFilePicker){
+    window.showOpenFilePicker({types:[{description:"H3 工作台存档（JSON）",accept:{"application/json":[".json"]}}]})
+    .then(function(h){return h[0].getFile();})
+    .then(function(f){return f.text().then(function(t){apply(t);});})
+    .then(function(){flash("已从本地读取");})
+    .catch(function(e){if(e&&e.name==="AbortError")return;flash("读取失败："+e.message);});
+  }else{
+    var i=document.createElement("input");i.type="file";i.accept=".json,.txt";
+    i.onchange=function(){var f=i.files[0];if(!f)return;var r=new FileReader();r.onload=function(){apply(r.result);flash("已读取");};r.readAsText(f);};
+    i.click();
+  }
+}
+function apply(d){
+  var keepWear=S.wearPreset||{cloth:"",suit:""};
+  try{var o=JSON.parse(d);if(!o.S)throw 0;S=o.S;}catch(e){flash("文件格式不对");return;}
+  if(!S.wearPreset)S.wearPreset=keepWear;
+  if(!S.apiUrl)S.apiUrl="http://127.0.0.1:8080/v1";
+  if(!S.multiSeg||S.multiSeg==="auto")S.multiSeg="10";
+  S.matPrev="";
+  $("duration").value=S.duration||5;$("aspect").value=S.aspect||"16:9";$("ckpt").value=S.ckpt||"fl2va";
+  $("apiUrl").value=S.apiUrl;$("modelId").value=S.modelId||"";
+  $("briefText").value=S.brief||"";
+  $("briefOut").value=S.briefOut||"";
+  $("briefOutWrap").style.display=S.briefOut?"":"none";
+  $("multiBrief").value=S.multiBrief||"";$("multiSeg").value=S.multiSeg;
+  $("multiPicNote").value=S.multiPicNote||"";
+  $("multiWear").value=S.multiWear||"none";$("multiWearText").value=S.multiWearText||"";
+  loadAnchor();
+  initShotCount();loadDialogue();
+  if(!S.shotPlan)S.shotPlan=[];
+  if(S.shotAlign===undefined)S.shotAlign=true;
+  if(S.multiSegs&&S.multiSegs.length){for(var mi=0;mi<S.multiSegs.length;mi++){if(S.multiSegs[mi].st==="run")S.multiSegs[mi].st="wait";}}
+  sanitizeLines();syncChips();route();calcSplit();renderMultiList();renderShotPlan();renderLines();
+  wTab(S.work==="multi"?"multi":"brief");}
+function resetAll(){if(!confirm("清空当前全部内容？"))return;
+  S={work:"brief",mat:"none",duration:5,aspect:"16:9",ckpt:"fl2va",apiUrl:"http://127.0.0.1:8080/v1",modelId:"",
+    brief:"",briefOut:"",
+    multiBrief:"",multiSeg:"10",multiSegs:[],multiPicNote:"",
+    multiWear:"none",multiWearText:"",wearPreset:S.wearPreset||{cloth:"",suit:""},matPrev:"",
+    anchChar:"",anchScene:"",anchState:"",anchorCam:"",anchorDist:"",anchorFix:"",
+    dialogueLang:"zh",dialogueSpeaker:"auto",dialogueSpeakerName:"",dialogueNote:"",
+    lines:[],
+    shotCount:0,shotPlan:[],shotMode:"even",shotCamBase:"",shotTrans:"",shotEnd:"",shotAlign:true};
+  $("briefText").value="";$("briefOut").value="";
+  $("multiBrief").value="";$("multiSeg").value=S.multiSeg;$("multiPicNote").value="";
+  $("multiWear").value="none";$("multiWearText").value="";
+  clearAnchor();loadDialogue();initShotCount();
+  MULTI={run:false,stop:false,brief:"",p:null,anchor:"",lastShot:"",lastSound:""};
+  $("briefOutWrap").style.display="none";
+  syncChips();route();calcSplit();renderMultiList();renderShotPlan();renderLines();}
+
+function apiBase(){return ($("apiUrl").value||"").trim().replace(/\/+$/,"");}
+function reqJSON(url,opt){
+  return fetch(url,opt).then(function(r){
+    return r.text().then(function(txt){
+      var j=null;try{j=JSON.parse(txt);}catch(e){}
+      if(!r.ok)throw new Error((j&&j.error&&j.error.message)||txt.slice(0,200)||("HTTP "+r.status));
+      return j;
+    });
+  });
+}
+function pickModel(base){return Promise.resolve(DEF_MODEL);}
+function testConn(){
+  var base=apiBase(),info=$("connInfo");
+  if(!base){info.textContent="先填服务地址";return;}
+  info.textContent="连接中…";
+  reqJSON(base+"/models",{method:"GET"}).then(function(j){
+    var d=(j.data||[]).map(function(m){return m.id+(m.status&&m.status.value?"（"+m.status.value+"）":"");});
+    var has=(j.data||[]).some(function(m){return m.id===DEF_MODEL;});
+    info.textContent=(has?"已连接：":"注意：列表中未找到 "+DEF_MODEL+"，当前可用：")
+      +(d.join("，")||"（无可用模型）");
+  }).catch(function(e){info.textContent="连接失败："+e.message;});
+}
+function buildBriefSys(){
+  return "你是 MiniMax H3 视频模型的提示词工程师。根据用户的一句需求，输出一份可直接使用的 H3 提示词，不要任何解释、不要代码块围栏。\n"
+    +"任务类型："+S.task+"（权重 "+S.weight+"）；时长 "+S.duration+" 秒；画幅 "+S.aspect+"。\n"
+    +(S.task==="Ref2VA"
+      ? "按 Ref2VA 六段式输出，字段名照抄、顺序不变：subject_definitions: / summary: / retention_analysis: / detailed_description: / overall_soundscape: / non_diegetic_music:\n"
+        +"subject_definitions 里凡从参考图取来的主体必须用 <Picture N> 引用（例：<Subject 1> 为 <Picture 1> 中的女性…）；retention_analysis 逐个 <Subject N> 写保留级别（fully_preserved / partially_preserved / attribute_transfer / weak_reference）。\n"
+      : "输出整合式描述，字段名照抄：integrated_multimodal_description: / overall_soundscape: / non_diegetic_music:\n")
+    +"镜头写法：[Shot 1] 不带时间戳，后续镜头写 [Shot N] At MM:SS.mmm；运镜写进句子里（类型 + 幅度 + 速度），不要单独列一条。\n"
+    +"正文一律用中文书写；只有字段名、[Shot N]、<Subject N>、<Picture N>、时间戳、保留级别枚举值保留英文。";
+}
+function genFromBrief(){
+  var base=apiBase();
+  if(!base){alert("先在上方填写 llama-server 地址，例如 http://127.0.0.1:8080/v1");return;}
+  var brief=($("briefText").value||"").trim();
+  if(!brief){alert("先写点需求描述，笼统或详细都行");return;}
+  S.brief=brief;
+  var b=$("genBtn"),old=b.textContent,info=$("genInfo");
+  b.textContent="生成中…（约 30-60 秒）";b.disabled=true;info.textContent="模型思考中，不要关页面…";
+  reqJSON(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:DEF_MODEL,messages:[{role:"system",content:buildBriefSys()},{role:"user",content:brief+"\n\n（时长 "+S.duration+" 秒，画幅 "+S.aspect+"。请直接给出完整提示词。）"}],temperature:0.7,max_tokens:6144,reasoning_budget:0})})
+  .then(function(j){
+    var msg=j.choices&&j.choices[0]&&j.choices[0].message;
+    var t=msg&&msg.content;
+    if(!t&&msg&&msg.reasoning_content)t=String(msg.reasoning_content).replace(/<think>[\s\S]*?<\/think>/g,"").trim();
+    if(!t)throw new Error("空返回（思考用光了 token，再试一次）");
+    $("briefOut").value=t;$("briefOutWrap").style.display="";S.briefOut=t;
+    info.textContent="已生成，点下方「复制」即可用";
+  })
+  .catch(function(e){info.textContent="生成失败："+e.message;})
+  .then(function(){b.textContent=old;b.disabled=false;});
+}
+function copyBrief(){cp($("briefOut").value||"");flash("已复制生成结果");}
+
+/* ===== 图片识别（本机 llama-server 视觉模型，QweN3.6_35B 自带 mmproj）===== */
+var IMG_BUSY=false;
+function pickBriefImg(){
+  if(IMG_BUSY){alert("正在识别上一张，请等它完成");return;}
+  var base=apiBase();
+  if(!base){alert("先在上方「本地服务地址」填写 llama-server 地址，例如 http://127.0.0.1:8080/v1");return;}
+  var i=document.createElement("input");i.type="file";i.accept="image/*";
+  i.onchange=function(){var f=i.files&&i.files[0];if(f)recognizeImg(f);};
+  i.click();
+}
+function recognizeImg(f){
+  var base=apiBase();
+  if(!base){alert("先在上方「本地服务地址」填写 llama-server 地址");return;}
+  if(f.type&&f.type.indexOf("image/")!==0){alert("请选择图片文件");return;}
+  var info=$("imgInfo"),prevWrap=$("imgPrevWrap"),prev=$("imgPrev");
+  IMG_BUSY=true;
+  var objUrl=URL.createObjectURL(f),dataUrl="";
+  prev.src=objUrl;prevWrap.style.display="";prevWrap.style.display="flex";
+  info.textContent="图片读取中…";
+  var r=new FileReader();
+  r.onload=function(){
+    dataUrl=String(r.result||"");
+    if(!dataUrl){imgCleanup();info.textContent="图片读取失败，请换一张试试";return;}
+    info.textContent="视觉模型识别中…（约 20-60 秒，识别完自动清理图片）";
+    reqJSON(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:DEF_MODEL,messages:[{role:"user",content:[
+        {type:"text",text:"请仔细观察这张图片，输出一段中文描述，供视频提示词创作使用。要求：写清主体（人物/物体）的外观特征（发型发色、服装款式与颜色、体型与姿态）、场景环境与光线、画面风格与构图；语言具体、可直接用于写视频提示词。只输出描述文字本身，不要任何解释、前言或代码块围栏。"},
+        {type:"image_url",image_url:{url:dataUrl}}]}],
+        temperature:0.4,max_tokens:4096,chat_template_kwargs:{enable_thinking:false}})})
+    .then(function(j){
+      var t=aiText(j).replace(/```[a-z]*/gi,"").replace(/```/g,"").trim();
+      var e=$("multiBrief"),cur=(e.value||"").trim();
+      e.value=(cur?cur+"\n":"")+t;
+      S.multiBrief=e.value;
+      info.textContent="已识别并把内容写进「整体需求」框，图片缓存已自动清理。";
+      flash("图片已识别");
+    })
+    .catch(function(e){info.textContent="识别失败："+e.message;})
+    .then(function(){imgCleanup();});
+  };
+  r.onerror=function(){imgCleanup();info.textContent="图片读取失败，请换一张试试";};
+  r.readAsDataURL(f);
+  function imgCleanup(){
+    // 识别结束（无论成败）：立刻清理图片缓存 —— 释放预览、丢弃 base64、回收 objectURL
+    dataUrl="";
+    try{URL.revokeObjectURL(objUrl);}catch(_e){}
+    prev.src="";
+    prevWrap.style.display="none";
+    IMG_BUSY=false;
+  }
+}
+
+var MULTI={run:false,stop:false,brief:"",p:null,anchor:"",lastShot:"",lastSound:""};
+var SIX=["subject_definitions","summary","retention_analysis","detailed_description","overall_soundscape","non_diegetic_music"];
+function fmtT(s){
+  s=Math.max(0,+s||0);
+  var m=Math.floor(s/60),r=s-m*60;
+  return (m<10?"0":"")+m+":"+(r<10?"0":"")+r.toFixed(3);
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function segDur(){
+  var v=($("multiSeg")&&$("multiSeg").value)||"10";
+  S.multiSeg=v;
+  return clamp(+v||10,4,15);
+}
+function calcSplit(){
+  var el=$("multiPlan");if(!el)return null;
+  var d=segDur(),segs=S.multiSegs||[],n=segs.length,tot=0,k;
+  for(k=0;k<n;k++)tot+=(segs[k].dur||d);
+  el.innerHTML="每段 <b>"+d+" 秒</b>　已生成 <b>"+n+" 段</b>　累计 "+(tot?tot+" 秒":"—");
+  var adv=$("multiAdvice");
+  if(adv){
+    if(d>=14)adv.innerHTML='<span style="color:var(--warn)">接近 15 秒上限：长时间动作容易变形，且笔记本 GPU 散热受限、单次生成明显变慢。</span>';
+    else if(d<=6)adv.innerHTML='<span style="color:var(--warn)">每段偏短会让段数变多，人物一致性更难维持。</span>';
+    else adv.innerHTML="对 5090 Laptop（24GB）来说每段 8–12 秒比较稳。按本段 <b>"+d+" 秒</b> 算，镜头数建议 <b>"
+      +Math.max(2,Math.round(d/3))+"–"+Math.max(3,Math.round(d/1.8))+" 个</b>（每镜 1.8–3 秒最不容易把动作切碎）。段数不限：想收尾随时停手，点「复制全片」即可拿到全部段落。";
+  }
+  renderShotPlan();
+  updateMultiStat(null);
+  return {dur:d,n:n};
+}
+
+function cleanEnd(s){
+  s=String(s==null?"":s);
+  s=s.replace(/^\s*(?:本段|段落)结束(?:时(?:的新状态|的状态|的新姿态)?)?(?:为|是|：|:)?\s*/,"");
+  s=s.replace(/^\s*(一句话|one\s+sentence|the\s+new\s+state|final\s+state|new\s+pose)\s*[:：\-–]?\s*/i,"");
+  return s.trim();
+}
+function cleanTpl(x){
+  x=String(x==null?"":x);
+  x=x.replace(/^\s*(一句话|one sentence)\s*[:：]\s*/gm,"");
+  x=x.replace(/^\s*<(?!Subject|Picture|Video|Audio|Segment|Shot)[^<>]*>\s*$/gm,"");
+  x=x.replace(/^\s*<Subject\s*\d+>\s*(is|为)?\s*(\.\.\.|…|…+)\s*$/gmi,"");
+  x=x.replace(/\n{3,}/g,"\n\n").trim();
+  return x;
+}
+function lastShotOf(t){
+  t=String(t==null?"":t);
+  var re=/\[Shot\s*\d+\]/gi,m,last=-1;
+  while((m=re.exec(t)))last=m.index;
+  if(last<0)return "";
+  var s=t.slice(last);
+  var nx=/\n\s*\n/.exec(s);
+  if(nx&&nx.index>40)s=s.slice(0,nx.index);
+  return s.trim().slice(0,400);
+}
+function shotStart(t){
+  t=String(t||"");
+  var d=/\bdetailed_description\s*:/i.exec(t);
+  var s=d?t.slice(d.index):t;
+  var m=/\[Shot\s*(\d+)\]/i.exec(s);
+  return m?+m[1]:0;
+}
+function normSeg(t,dur){
+  var to="[Segment 1: 0.000 - "+(+dur||0).toFixed(3)+" seconds]";
+  return String(t==null?"":t).replace(/\[Segment\s*\d+\s*:\s*[^\[\]]*?seconds?\]/gi,to);
+}
+function extractHead(t){
+  t=String(t==null?"":t);
+  var dm=/\n\s*detailed_description\s*:/i.exec(t);
+  return dm?t.slice(0,dm.index).trim():"";
+}
+function soundOf(t){
+  var m=/\n\s*overall_soundscape\s*:/i.exec(String(t||""));
+  if(!m)return "";
+  return String(t).slice(m.index).replace(/\s+/g," ").trim().slice(0,240);
+}
+function missingFields(t){
+  var out=[],i;
+  for(i=0;i<SIX.length;i++){
+    var re=new RegExp("(^|\\n)\\s*"+SIX[i]+"\\s*:","i");
+    if(!re.test(String(t||"")))out.push(SIX[i]);
+  }
+  return out;
+}
+function parseMultiSeg(t){
+  var s=String(t==null?"":t).replace(/```[a-z]*\s*/gi,"").trim();
+  var endM=/###END###\s*([\s\S]*?)(?=\n\s*###|$)/i.exec(s);
+  var end=endM?cleanEnd(endM[1]):"";
+  if(endM)s=s.replace(/###END###[\s\S]*?(?=\n\s*###|$)/i,"").trim();
+  s=s.replace(/^\s*#{2,4}\s*(HEAD|BODY|TAIL|PROMPT|END)\s*#{0,4}\s*$/gmi,"");
+  var m=/\bsubject_definitions\s*:/i.exec(s);
+  if(m&&m.index>0)s=s.slice(m.index);
+  s=cleanTpl(s);
+  return {text:s,head:extractHead(s),end:end,lastShot:lastShotOf(s),
+          miss:missingFields(s),has:/detailed_description\s*:/i.test(s)};
+}
+function aiText(j){
+  var msg=j.choices&&j.choices[0]&&j.choices[0].message;
+  var t=msg&&msg.content;
+  if(!t&&msg&&msg.reasoning_content)t=String(msg.reasoning_content).replace(/<think>[\s\S]*?<\/think>/g,"").trim();
+  if(!t)throw new Error("空返回（思考用光了 token，再试一次）");
+  return t;
+}
+function picList(){
+  var notes=String((($("multiPicNote")&&$("multiPicNote").value)||S.multiPicNote||"")).split(/\r?\n/)
+    .map(function(x){return x.trim();}).filter(function(x){return x;});
+  var n=notes.length||1;if(n>9)n=9;
+  var out=[];
+  for(var i=1;i<=n;i++){
+    var d=String(notes[i-1]||"").trim().replace(/^\s*第?\s*\d+\s*张\s*[:：]?\s*/,"");
+    out.push("<Picture "+i+">"+(d?"："+d:"（用户未说明，请按整体需求推断这张图的内容）"));
+  }
+  return out;
+}
+function picManifest(){return picList().join("\n");}
+function pickWear(){
+  var k=$("multiWear").value;S.multiWear=k;
+  if(k!=="none"&&(S.wearPreset||{})[k]){S.multiWearText=S.wearPreset[k];$("multiWearText").value=S.wearPreset[k];}
+  else if(k==="none"){S.multiWearText="";$("multiWearText").value="";}
+}
+function saveWear(k){
+  var t=($("multiWearText").value||"").trim();
+  if(!t){alert("先把句式写进下面的文本框再存");return;}
+  if(!S.wearPreset)S.wearPreset={};
+  S.wearPreset[k]=t;S.multiWearText=t;S.multiWear=k;$("multiWear").value=k;
+  flash("已存为「"+(k==="cloth"?"服装":"紧身衣")+"」预设");
+}
+function clearWear(){
+  S.multiWearText="";S.multiWear="none";
+  $("multiWearText").value="";$("multiWear").value="none";
+}
+function wearText(){return String((S.multiWear==="none")?"":(S.multiWearText||"")).trim();}
+function wearLead(){
+  var t=wearText();if(!t)return "";
+  var m=/<Subject\s*1>[^\n]*/i.exec(t);
+  return (m?m[0]:t).slice(0,30);
+}
+function wearMiss(t){
+  var lead=wearLead();
+  if(!lead)return "";
+  var s=String(t||"");
+  if(s.indexOf(lead)<0)return "主体锚定句式没出现在输出里，建议点「重试」或手动补上";
+  var m=/retention_analysis\s*[:：]([\s\S]*?)(?=\n\s*[a-z_]+\s*[:：]|$)/i.exec(s);
+  var ret=m?m[1]:"";
+  if(ret && ret.indexOf(lead)<0)return "锚定句式没同步进 retention_analysis 的 <Subject 1> 行，可手动补上";
+  return "";
+}
+function anchIn(k,el){
+  var map={char:"anchChar",scene:"anchScene",state:"anchState"};
+  var lim={char:250,scene:500,state:250};
+  var v=el.value||"";
+  if(v.length>lim[k]){v=v.slice(0,lim[k]);el.value=v;}
+  S[map[k]]=v;
+  var c=$("cnt"+k.charAt(0).toUpperCase()+k.slice(1));
+  if(c)c.textContent=v.length+" / "+lim[k];
+}
+function clearAnchor(){
+  S.anchChar="";S.anchScene="";S.anchState="";S.anchorCam="";S.anchorDist="";S.anchorFix="";
+  ["anchChar","anchScene","anchState","anchCam","anchDist","anchFix"].forEach(function(id){
+    var e=$(id);if(e)e.value="";
+  });
+  anchIn("char",$("anchChar"));anchIn("scene",$("anchScene"));anchIn("state",$("anchState"));
+}
+function loadAnchor(){
+  var f=[["anchChar","anchChar"],["anchScene","anchScene"],["anchState","anchState"],
+         ["anchCam","anchorCam"],["anchDist","anchorDist"],["anchFix","anchorFix"]];
+  for(var i=0;i<f.length;i++){
+    var e=$(f[i][0]);if(!e)continue;
+    e.value=S[f[i][1]]||"";
+    if(e.tagName==="TEXTAREA")anchIn(f[i][0].replace("anch","").toLowerCase(),e);
+  }
+}
+function sanitizeLines(){
+  if(!S.lines)S.lines=[];
+  for(var i=0;i<S.lines.length;i++){
+    var l=S.lines[i];
+    if(l.on===undefined)l.on=true;
+    if(l.text===undefined)l.text="";
+    if(l.who===undefined)l.who="";
+    if(l.emo===undefined)l.emo="";
+    if(l.voice===undefined)l.voice="";
+    if(l.kind===undefined)l.kind="line";
+    if(l.at===undefined)l.at="";
+    if(l.state===undefined)l.state="";
+    // 旧存档没有 seg/shot：留空＝不限，行为与之前一致
+    if(l.seg===undefined||l.seg===null)l.seg="";
+    if(l.shot===undefined||l.shot===null)l.shot="";
+    l.seg=String(l.seg);l.shot=String(l.shot);
+    if(l.shot&&!(S.shotPlan||[]).length)l.shot="";   // 没有镜头表时镜头归属无意义
+  }
+}
+function loadDialogue(){
+  if(!S.lines)S.lines=[];
+  var m={dSpk:"dialogueSpeaker",dSpkName:"dialogueSpeakerName",dLang:"dialogueLang",dNote:"dialogueNote"};
+  for(var k in m){var e=$(k);if(e)e.value=S[m[k]]||e.value;}
+  var a=$("dAlign");if(a)a.checked=(S.shotAlign!==false);
+}
+function anchorCard(){
+  var out=[];
+  if((S.anchChar||"").trim())out.push("· 人物状态（写入 subject_definitions 的 <Subject 1>，并在 retention_analysis 保留契约中钉住）："+S.anchChar.trim());
+  if((S.anchScene||"").trim())out.push("· 场景状态（写入 subject_definitions 的 <Subject 2>，并在 detailed_description 开头作为贯穿全段的全局设定）："+S.anchScene.trim());
+  if((S.anchState||"").trim())out.push("· 持续状态（写入 subject_definitions 的 <Subject 3>，并在 retention_analysis 声明它贯穿全片）："+S.anchState.trim());
+  var cam=[];
+  if(S.anchorCam)cam.push("运镜方式="+S.anchorCam);
+  if(S.anchorDist)cam.push("拍摄距离="+S.anchorDist);
+  if(S.anchorFix)cam.push("镜头"+(S.anchorFix==="固定机位"?"=固定机位，全段不变":"=段内可变化"));
+  if(cam.length)out.push("· 运镜（写入 detailed_description 的每个镜头）："+cam.join("；"));
+  return out.join("\n");
+}
+
+/* ===================== 台词锚定 ===================== */
+function lineEmpty(){return {on:true,text:"",who:"",emo:"",voice:"",kind:"line",at:"",state:"",seg:"",shot:""};}
+function addLine(){
+  if(!S.lines)S.lines=[];
+  if(S.lines.length>=20){alert("总共最多 20 句，够用了。太密会挤掉画质（H3 的声音与画面是联合生成的）。");return;}
+  var l=lineEmpty();
+  l.seg=String(curSegNo());   // 默认归到「待生成的那一段」
+  l.shot=nextFreeShot();      // 默认落在本段第一个还没排台词的镜头
+  S.lines.push(l);renderLines();
+}
+function addLineVoice(){
+  if(!S.lines)S.lines=[];
+  if(S.lines.length>=20){alert("总共最多 20 句。");return;}
+  var l=lineEmpty();
+  l.kind="voiceover";l.voice="正常说话";
+  l.seg=String(curSegNo());
+  l.shot=nextFreeShot();
+  S.lines.push(l);renderLines();
+}
+function delLine(i){S.lines.splice(i,1);renderLines();}
+function clearLines(){if(!(S.lines||[]).length)return;if(!confirm("清空全部台词？"))return;S.lines=[];renderLines();}
+function hasVoiceover(){
+  for(var i=0;i<(S.lines||[]).length;i++){if(S.lines[i].on!==false&&S.lines[i].kind==="voiceover")return true;}
+  return false;
+}
+function lineCount(){var n=0;for(var i=0;i<(S.lines||[]).length;i++){if(S.lines[i].on!==false&&String(S.lines[i].text||"").trim())n++;}return n;}
+function curSegNo(){return (S.multiSegs||[]).length+1;}
+function lineSegOk(l,segIdx){
+  if(!l||l.on===false)return false;
+  if(!String(l.text||"").trim())return false;
+  var sg=String(l.seg==null?"":l.seg).trim();
+  if(!sg||sg==="all")return true;
+  return parseInt(sg,10)===(parseInt(segIdx,10)+1);
+}
+function linesForSeg(segIdx){return (S.lines||[]).filter(function(l){return lineSegOk(l,segIdx);});}
+function segOpts(cur){
+  var m=[["","不限（每段都可出现）"]];
+  var n=Math.max(curSegNo(),parseInt(cur,10)||0,1);
+  for(var i=1;i<=n;i++)m.push([String(i),"第 "+i+" 段"+(i===curSegNo()?"（待生成）":"")]);
+  return opts(m,String(cur==null?"":cur));
+}
+function shotOpts(cur){
+  var m=[["","不限（由模型安排）"]],p=S.shotPlan||[];
+  if(p.length){for(var i=0;i<p.length;i++)m.push([String(i+1),"[Shot "+(i+1)+"]"+(i>0&&p[i].at?" "+p[i].at:"")]);}
+  else{for(var j=1;j<=12;j++)m.push([String(j),"[Shot "+j+"]"]);}
+  return opts(m,String(cur==null?"":cur));
+}
+function nextFreeShot(){
+  var p=S.shotPlan||[];if(!p.length)return "";
+  for(var i=0;i<p.length;i++){
+    var used=false;
+    for(var j=0;j<(S.lines||[]).length;j++){
+      var l=S.lines[j];
+      if(l.on===false)continue;
+      if(String(l.shot)===String(i+1)){used=true;break;}
+    }
+    if(!used)return String(i+1);
+  }
+  return String(p.length);
+}
+function renderLines(){
+  var box=$("lineList");if(!box)return;
+  var ls=S.lines||[],n=ls.length,h="",i,cur=curSegNo();
+  if(!n){
+    box.innerHTML='';
+  }else{
+    h+='<table class="pl" style="min-width:1140px"><tr>'
+      +'<th style="width:22px">用</th>'
+      +'<th style="width:96px">在哪一段</th>'
+      +'<th style="width:110px">在哪个镜头</th>'
+      +'<th style="width:76px">位置(秒)</th>'
+      +'<th style="min-width:190px">台词原文（只写中文内容，注入时自动包成 <code>&lt;d&gt;[Chinese] …&lt;/d&gt;</code>）</th>'
+      +'<th style="width:104px">谁在说</th>'
+      +'<th style="width:104px">情绪</th>'
+      +'<th style="width:126px">语气强度</th>'
+      +'<th style="width:124px">发声类型</th>'
+      +'<th style="width:112px">状态走向</th>'
+      +'<th style="width:28px"></th></tr>';
+    for(i=0;i<n;i++){
+      var l=ls[i],vo=(l.kind==="voiceover");
+      var bound=String(l.seg==null?"":l.seg).trim();
+      var na=(l.on!==false)&&String(l.text||"").trim()&&bound&&bound!=="all"&&parseInt(bound,10)!==cur;
+      var wsel='<select onchange="S.lines['+i+'].who=this.value;renderLines()">'
+        +opts([["","（跟随整栏默认）"],["s1","<Subject 1>"],["s2","<Subject 2>"],
+               ["custom","自定义"],["vo","画外解说人"]],l.who||"")+'</select>';
+      h+='<tr'+(l.on===false?' style="opacity:.4"':(na?' class="na"':''))+'>'
+        +'<td><input type="checkbox" '+(l.on===false?'':'checked')+' title="取消勾选＝本句不注入提示词" onchange="S.lines['+i+'].on=this.checked;renderLines()"></td>'
+        +'<td class="segcell"><select title="这句只在第几段出现；选「不限」则每段都注入" onchange="S.lines['+i+'].seg=this.value;renderLines()">'+segOpts(l.seg)+'</select></td>'
+        +'<td class="segcell">'+((S.shotPlan&&S.shotPlan.length)
+            ?'<select title="这句必须落在哪个镜头内" onchange="S.lines['+i+'].shot=this.value;renderLines()">'+shotOpts(l.shot)+'</select>'
+            :'<span class="mini" title="先在「③ 排本段镜头」建好镜头表，这里才能按镜头指定">先排镜头</span>')+'</td>'
+        +'<td><input value="'+esc(l.at||"")+'" placeholder="自动" title="相对本段起点的秒数；留空＝点「按镜头归属自动排时间点」自动算" oninput="S.lines['+i+'].at=this.value"></td>'
+        +'<td><textarea rows="2" placeholder="'+(vo?"画外音台词，如：她不会活过今晚。":"台词原文，如：别过来……我说了别过来！")+'" oninput="S.lines['+i+'].text=this.value">'+esc(l.text||"")+'</textarea></td>'
+        +'<td>'+wsel+'</td>'
+        +'<td><select onchange="S.lines['+i+'].emo=this.value">'+opts(L_EMO,l.emo||"")+'</select></td>'
+        +'<td><select onchange="S.lines['+i+'].voice=this.value">'+opts(L_VOICE,l.voice||"")+'</select></td>'
+        +'<td><select onchange="S.lines['+i+'].kind=this.value;renderLines()" style="'+(vo?'border-color:var(--acc-line);color:var(--acc)':'')+'">'+opts(L_KIND,l.kind||"line")+'</select></td>'
+        +'<td><select onchange="S.lines['+i+'].state=this.value">'+opts(L_STATE,l.state||"")+'</select></td>'
+        +'<td><button class="sm" onclick="delLine('+i+')" title="删除这句">×</button></td>'
+        +'</tr>';
+    }
+    h+='</table>';
+    box.innerHTML=h;
+  }
+  var on=0,vo=0,curN=0,j;
+  for(j=0;j<ls.length;j++){
+    if(ls[j].on===false)continue;
+    if(!String(ls[j].text||"").trim())continue;
+    on++;
+    if(String(ls[j].kind)==="voiceover")vo++;
+    if(lineSegOk(ls[j],cur-1))curN++;
+  }
+  var info=$("lineInfo");
+  if(info){
+    if(!on)info.innerHTML="尚未写台词。";
+    else info.innerHTML="共 <b>"+on+"</b> 句（画外音 "+vo+" 句）；其中属于<b>待生成的第 "+cur+" 段</b>的有 <b>"+curN+"</b> 句"
+      +(curN?"":"（这段暂时没有台词，可把某句的「在哪一段」改成第 "+cur+" 段或「不限」）");
+  }
+  var dist=$("lineDist");
+  if(dist){
+    if(!on){dist.innerHTML="—";}
+    else{
+      var g={},k;
+      for(k=0;k<ls.length;k++){
+        if(ls[k].on===false||!String(ls[k].text||"").trim())continue;
+        var b=String(ls[k].seg==null?"":ls[k].seg).trim();
+        var key=(!b||b==="all")?"不限":("第 "+b+" 段");
+        g[key]=(g[key]||0)+1;
+      }
+      var keys=Object.keys(g),parts=[];
+      keys.sort(function(a,b2){
+        var x=/第 (\d+) 段/.exec(a),y=/第 (\d+) 段/.exec(b2);
+        if(x&&y)return (+x[1])-(+y[1]);
+        return x?-1:(y?1:0);
+      });
+      for(k=0;k<keys.length;k++)parts.push("<b>"+keys[k]+"</b> "+g[keys[k]]+" 句");
+      dist.innerHTML=parts.join("　·　")+"<br>灰色行的句子属于别的段，生成第 "+cur+" 段时不会注入。";
+    }
+  }
+}
+function autoPlaceLines(){
+  var ls=S.lines||[];
+  if(!ls.length){alert("先加几句台词");return;}
+  var cur=curSegNo(),segIdx=cur-1;
+  var todo=linesForSeg(segIdx),i;
+  if(!todo.length){
+    alert("待生成的第 "+cur+" 段还没有台词。\n\n可把某句的「在哪一段」改成「第 "+cur+" 段」或「不限」，再点这个按钮。");
+    return;
+  }
+  if(S.shotAlign===false&&!confirm("「台词必须落在所指定的镜头内」当前没勾上，仍按镜头归属排时间点吗？"))return;
+  applyShotMode("quiet");
+  var plan=S.shotPlan||[],dur=segDur();
+  function num2(v){var x=parseFloat(String(v==null?"":v).replace(/[^\d.]/g,""));return isNaN(x)?0:x;}
+  function win(sn){
+    if(!plan.length)return [0,dur];
+    if(sn>=1&&sn<=plan.length){
+      var st=num2(plan[sn-1].at);
+      var nt=(sn<plan.length)?num2(plan[sn].at):dur;
+      if(nt<=st)nt=Math.min(dur,st+1);
+      return [st,nt];
+    }
+    return [0,dur];
+  }
+  // 第一遍：定归属（没指定镜头的，按顺序铺到各镜）
+  var groups={},seq=0;
+  for(i=0;i<todo.length;i++){
+    var l=todo[i];
+    var sn=parseInt(l.shot,10)||0;
+    if(sn<1||sn>plan.length){sn=plan.length?((seq%plan.length)+1):0;}
+    seq++;
+    if(sn&&plan.length)l.shot=String(sn);
+    var key=String(sn);
+    if(!groups[key])groups[key]=[];
+    groups[key].push(l);
+  }
+  // 第二遍：在同一镜的时间窗内均匀分布
+  var key2;
+  for(key2 in groups){
+    var arr=groups[key2],w=win(parseInt(key2,10)||0);
+    var st=w[0],nt=w[1],len=Math.max(0.4,nt-st);
+    for(var q=0;q<arr.length;q++){
+      var vo=(String(arr[q].kind)==="voiceover");
+      var idx=arr.length>1?(q/arr.length):0;
+      var frac=vo?Math.min(0.12+idx,0.8):Math.min(0.3+idx,0.88);
+      var t=st+len*frac;
+      if(t>nt-0.35)t=Math.max(st,nt-0.35);
+      arr[q].at=fmtT(t);
+    }
+  }
+  renderLines();flash("已按镜头归属排时间点");
+}
+function atShow(v){
+  v=String(v==null?"":v).trim();
+  if(!v)return "";
+  if(/^\d+(\.\d+)?$/.test(v))return Number(v).toFixed(3)+" 秒";
+  return v;   // 已是 MM:SS.mmm
+}
+/* 台词结构句式：<d>[Chinese] 原文</d> —— <d> 是台词标签，方括号里是语言标记，中间是中文原文 */
+function dLangTag(){
+  var m={zh:"Chinese","zh-dial":"Chinese",yue:"Chinese",en:"English",ja:"Japanese",ko:"Korean"};
+  return m[String(S.dialogueLang||"zh")]||"Chinese";
+}
+function dWrap(t){
+  t=String(t==null?"":t).trim();
+  if(!t)return "";
+  if(/^<d>[\s\S]*<\/d>$/i.test(t))return t;          // 已经包好结构的，不重复包
+  return "<d>["+dLangTag()+"] "+t+"</d>";
+}
+function dStrip(t){                                   // 只留台词原文，用于比对是否被逐字复用
+  return String(t==null?"":t).replace(/<\/?d>/gi,"").replace(/\[[A-Za-z]+\]/g,"").trim();
+}
+function whoOfLine(l){
+  if(l.who==="s1")return "<Subject 1>";
+  if(l.who==="s2")return "<Subject 2>";
+  if(l.who==="vo")return "画外解说人";
+  var sp=S.dialogueSpeaker||"auto";
+  if(sp==="s1")return "<Subject 1>";
+  if(sp==="custom")return (S.dialogueSpeakerName||"").trim()||"由模型按剧情判断";
+  if(sp==="off")return "画外解说人";
+  return "由模型按剧情判断";
+}
+function dialogueBlock(segIdx){
+  var i0=parseInt(segIdx,10);if(isNaN(i0))i0=0;
+  var cur=i0+1;
+  var all=(S.lines||[]);
+  var ls=linesForSeg(i0);
+  var skipped=0;
+  for(var z=0;z<all.length;z++){
+    if(all[z].on===false)continue;
+    if(!String(all[z].text||"").trim())continue;
+    if(!lineSegOk(all[z],i0))skipped++;
+  }
+  if(!ls.length){
+    if(String(S.dialogueNote||"").trim())
+      return "【本段人声要求】\n本段没有指定具体台词文本，不要凭空编造对白。人声与声音事件按下面处理（这一栏不做逐字锚定）：\n- "+String(S.dialogueNote).trim()+"\n"
+        +(skipped?"（另有 "+skipped+" 句台词属于别的段落，本段一律不要出现它们的内容。）\n":"");
+    return "";
+  }
+  var out="【台词锚定卡 · 本段共 "+ls.length+" 句，只列属于第 "+cur+" 段的句子】\n"
+    +"以下台词是【硬性锚定】，不是参考建议：每一句原文必须逐字出现在 overall_soundscape 与 detailed_description 里，"
+    +"不许改写、删减、概括、翻译或同义替换（保持中文原样）。\n"
+    +"- 台词一律使用 <d>[Chinese] 原文</d> 这一结构句式：<d> 与 </d> 是台词标签，方括号里的 Chinese 是语言标记，"
+    +"这两处必须原样保留英文、不得翻译、不得省略、不得换成别的标签或引号；只有标签中间的原文是中文。\n"
+    +"- 除下列台词外，本段不得出现任何其它人声台词：不要凭想象补台词、不要加旁白、也不要把台词改写成别的说法。\n"
+    +"- 每句台词在 overall_soundscape 里至少出现一次原文，禁止只写「说了几句话」这类概述。\n";
+  if(skipped)out+="- 另有 "+skipped+" 句台词属于别的段落，本段一律不要出现它们的内容。\n";
+  for(var i=0;i<ls.length;i++){
+    var vo=(ls[i].kind==="voiceover");
+    out+="\n【台词 "+(i+1)+"】"+(vo?"（画外音）":"（画面内）")+"\n";
+    out+="- 原文（按 <d>[Chinese] …</d> 结构逐字复用，结构与文字都不许改）："+dWrap(ls[i].text)+"\n";
+    out+="- 说话人："+whoOfLine(ls[i])+"\n";
+    var sn=parseInt(ls[i].shot,10)||0,sh=(S.shotPlan&&sn>=1&&sn<=S.shotPlan.length)?S.shotPlan[sn-1]:null;
+    if(sn&&S.shotPlan&&S.shotPlan.length){
+      out+="- 必须落在：[Shot "+sn+"] 内"+(sh&&sh.at?"（该镜从 "+sh.at+" 起）":"")
+        +(S.shotAlign===false?" —— 允许在该镜附近微调":" —— 不许放到别的镜头里，也不要跨多个镜头")+"\n";
+    }else{
+      out+="- 出现位置：安排在同"+(ls[i].at?"一个包含该时间点的镜头":"一个镜头")+"内，不要拆到多个镜头里\n";
+    }
+    if(ls[i].at)out+="- 出现时间："+atShow(ls[i].at)+"（相对本段起点，00:00.000 即本段第一帧）\n";
+    if(!vo&&ls[i].emo)out+="- 情绪："+labelOf(L_EMO,ls[i].emo)+"\n";
+    if(ls[i].voice)out+="- 语气强度："+labelOf(L_VOICE,ls[i].voice)+"\n";
+    if(vo)out+="- 发声类型：画外音 VO；说话人不在画面内，画面中不得出现正在对口型的嘴；声音清晰度按「像贴着镜头说」处理\n";
+    else if(ls[i].kind&&ls[i].kind!=="line")out+="- 发声类型："+labelOf(L_KIND,String(ls[i].kind))+"\n";
+    if(ls[i].state)out+="- 状态走向："+labelOf(L_STATE,ls[i].state)+"\n";
+    out+="- 落地要求：这句原文必须连同 <d>[Chinese] …</d> 结构一起出现在 overall_soundscape 的人声描述里；"
+      +(vo?"画面里不要出现对应的嘴部动作。":"同时在上述镜头里写出对应的口型开合、面部表情与身体反应，让画面与声音严格对得上。")+"\n";
+  }
+  out+="\n落地位置（三处同时锚定，一个都不能少）：\n"
+    +"1) overall_soundscape：逐句写清「谁说、什么情绪与语气、说了什么原文」；"
+    +"台词要整体照抄成 <d>[Chinese] 原文</d>，标签、语言标记与中间的文字都一字不改，不得翻译、不得拆掉标签只留文字。\n"
+    +"2) detailed_description：在对应的那个 [Shot N] 里同步写出说话人的口型、表情、呼吸节律与身体反应；"
+    +"台词原文也可以在镜头句里再照抄一次（同样带 <d>[Chinese] …</d>）—— 只在一处出现、另一处只做模糊描述是不合格的。\n"
+    +"3) retention_analysis：追加一行 <Voice 1>：fully_preserved（本段台词与语气逐字保留，未改写未翻译）。\n"
+    +"语气强度只描述发声质感（气息、音量、喉音、颤抖、破裂感），不要写成乐谱式的技术标注。";
+  var nt=String(S.dialogueNote||"").trim();
+  if(nt)out+="\n【台词之外的补充声音事件（本段生效）】"+nt;
+  return out;
+}
+function lineWarn(t,segIdx){
+  t=String(t||"");
+  var i0=parseInt(segIdx,10);if(isNaN(i0))i0=0;
+  var all=(S.lines||[]),ls=[],idx=[];
+  for(var k=0;k<all.length;k++){
+    if(lineSegOk(all[k],i0)){ls.push(all[k]);idx.push(k+1);}
+  }
+  if(!ls.length)return "";
+  var flat=dStrip(t).replace(/[「」“”"'，。！？、…；：‘’\s]/g,"");
+  var miss=[];
+  for(var i=0;i<ls.length;i++){
+    var key=dStrip(ls[i].text).replace(/[「」“”"'，。！？、…；：‘’\s]/g,"");
+    if(!key)continue;
+    if(flat.indexOf(key)<0)miss.push("第 "+idx[i]+" 句");
+  }
+  if(miss.length)return miss.join("、")+"的台词原文没出现在输出里，建议点「重试」或手动补上（台词是被要求逐字复用的硬锚定）";
+  return "";
+}
+
+/* ===================== 镜头规划 ===================== */
+function shotEmpty(){return {at:"",cam:"",dist:"",who:"",trans:"",note:""};}
+function initShotCount(){
+  var sel=$("shotCount");
+  var h='<option value="0">自动（不指定，模型自行编排）</option>';
+  for(var i=1;i<=12;i++)h+='<option value="'+i+'">'+i+' 个镜头</option>';
+  if(sel){
+    sel.innerHTML=h;
+    sel.options=[];
+    if(!S.shotPlan)S.shotPlan=[];
+    S.shotCount=(S.shotPlan.length>0)?S.shotPlan.length:(parseInt(S.shotCount,10)||0);
+    sel.value=String(S.shotCount);
+  }
+  if(!S.shotPlan)S.shotPlan=[];
+  var m=$("shotMode");if(m)m.value=S.shotMode||"even";
+  var cb=$("shotCamBase");if(cb)cb.value=S.shotCamBase||"";
+  var tr=$("shotTrans");if(tr)tr.value=S.shotTrans||"";
+  var en=$("shotEnd");if(en)en.value=S.shotEnd||"";
+}
+function setShotCount(v){
+  var n=parseInt(v,10)||0;
+  S.shotCount=n;
+  if(n<=0){S.shotPlan=[];clampLineShots(0);renderShotPlan();renderLines();return;}
+  var p=S.shotPlan||[],i;
+  if(p.length>n)p=p.slice(0,n);
+  while(p.length<n){
+    var row=shotEmpty();
+    if(p.length>=1)row.trans=(S.shotTrans||"");
+    p.push(row);
+  }
+  S.shotPlan=p;
+  if(S.shotMode==="fixed"&&n>1){S.shotMode="even";var m=$("shotMode");if(m)m.value="even";}
+  clampLineShots(n);
+  applyShotMode();
+  renderLines();
+}
+function clampLineShots(n){
+  for(var q=0;q<(S.lines||[]).length;q++){
+    var l=S.lines[q],sv=parseInt(l.shot,10)||0;
+    if(sv>n)l.shot=(n>0?String(n):"");
+  }
+}
+function addShotRow(kind){
+  if(!S.shotPlan)S.shotPlan=[];
+  if(S.shotPlan.length>=12){alert("一段最多 12 个镜头。再密基本就看不清动作了。");return;}
+  if(kind===3){
+    var names=["A","B","C"];
+    for(var j=0;j<3;j++){var r=shotEmpty();r.note="镜组 "+names[j];r.trans=(S.shotTrans||"");S.shotPlan.push(r);}
+  }else{
+    var r2=shotEmpty();r2.trans=(S.shotTrans||"");S.shotPlan.push(r2);
+  }
+  S.shotCount=S.shotPlan.length;
+  var sel=$("shotCount");if(sel)sel.value=String(S.shotCount);
+  applyShotMode("quiet");renderShotPlan();renderLines();
+}
+function delShotRow(i){S.shotPlan.splice(i,1);S.shotCount=S.shotPlan.length;var sel=$("shotCount");if(sel)sel.value=String(S.shotCount);clampLineShots(S.shotCount);applyShotMode("quiet");renderShotPlan();renderLines();}
+function clearShots(){if(!(S.shotPlan||[]).length)return;if(!confirm("清空镜头表？"))return;S.shotPlan=[];S.shotCount=0;var sel=$("shotCount");if(sel)sel.value="0";clampLineShots(0);renderShotPlan();renderLines();}
+function shotTimesOf(n,dur){
+  var out=[],i;
+  if(n<=0)return out;
+  if(n===1){out.push(0);return out;}
+  var head=Math.min(1.0,dur*0.2),tail=Math.min(1.0,dur*0.2);
+  var usable=Math.max(0,dur-head-tail);
+  var step=usable/(n-1);
+  for(i=0;i<n;i++)out.push(i===0?0:Math.min(head+step*i,Math.max(0,dur-0.3)));
+  return out;
+}
+function applyShotMode(quiet){
+  var p=S.shotPlan||[];if(!p.length)return;
+  var dur=segDur(),mode=S.shotMode||"even",t=shotTimesOf(p.length,dur),i;
+  if(mode==="fixed"){
+    if(p.length>1){S.shotPlan=[p[0]];p=S.shotPlan;S.shotCount=1;var sel=$("shotCount");if(sel)sel.value="1";}
+    p[0].at="";
+    if(!p[0].cam)p[0].cam="固定";
+    if(!quiet){renderShotPlan();}
+    return;
+  }
+  if(mode==="even"||mode==="fixed"){
+    for(i=0;i<p.length;i++)p[i].at=(i===0?"":fmtT(t[i]));
+  }else if(mode==="manual"){
+    for(i=0;i<p.length;i++){if(!p[i].at)p[i].at=(i===0?"":fmtT(t[i]));}
+  }
+  if(!quiet)renderShotPlan();
+}
+function renderShotPlan(){
+  var tb=$("shotTable"),info=$("shotInfo");
+  var p=S.shotPlan||[],dur=segDur();
+  if(tb){
+    if(!p.length){
+      tb.innerHTML='';
+    }else{
+      var h='<tr><th style="width:44px">镜头</th><th style="width:92px">位置(秒)</th><th style="width:128px">运镜</th>'
+        +'<th style="width:104px">景别</th><th style="width:120px">画面主角</th><th style="width:104px">转场</th>'
+        +'<th>这一镜要发生什么（可空）</th><th style="width:30px"></th></tr>';
+      for(var i=0;i<p.length;i++){
+        var real=(i===0?"0.000":((p[i].at||"").replace(/[^\d:.]/g,"")||"—"));
+        h+='<tr>'
+          +'<td class="idx">[Shot '+(i+1)+']</td>'
+          +'<td><input value="'+esc(i===0?"":(p[i].at||""))+'" '+(i===0?'disabled placeholder="0.000"':'placeholder="自动"')
+          +' oninput="S.shotPlan['+i+'].at=this.value" title="相对本段起点；第一镜永远是 0.000"></td>'
+          +'<td><select onchange="S.shotPlan['+i+'].cam=this.value">'+opts(SHOT_CAM,p[i].cam||"")+'</select></td>'
+          +'<td><select onchange="S.shotPlan['+i+'].dist=this.value">'+opts(SHOT_DIST,p[i].dist||"")+'</select></td>'
+          +'<td><select onchange="S.shotPlan['+i+'].who=this.value">'+opts(SHOT_WHO,p[i].who||"")+'</select></td>'
+          +'<td><select onchange="S.shotPlan['+i+'].trans=this.value">'+opts(SHOT_TRANS,p[i].trans||"")+'</select></td>'
+          +'<td><input value="'+esc(p[i].note||"")+'" placeholder="如：手指扣紧栏杆，指节发白" oninput="S.shotPlan['+i+'].note=this.value"></td>'
+          +'<td><button class="sm" onclick="delShotRow('+i+')" title="删除这一镜">×</button></td>'
+          +'</tr>';
+      }
+      tb.innerHTML=h;
+    }
+  }
+  if(info){
+    if(!p.length){info.innerHTML='自动模式：每段约 <b>'+Math.max(3,Math.round(dur/2.5))+'</b> 个镜头，由模型按内容决定。';}
+    else{
+      var avg=(dur/p.length).toFixed(2);
+      var w="";
+      if(p.length>1&&dur/p.length<1.2)w='<span class="badge">每镜不足 1.2 秒，动作容易被切碎，建议减到 '+(Math.floor(dur/1.2)-1)+' 镜以内</span>';
+      else w='<span class="badge ok">平均每镜 '+avg+' 秒</span>';
+      info.innerHTML='已定 <b>'+p.length+'</b> 个镜头　本段 '+dur+' 秒　'+w;
+    }
+  }
+}
+function shotPlanCard(){
+  var p=S.shotPlan||[];if(!p.length)return "";
+  var dur=segDur(),out="";
+  for(var i=0;i<p.length;i++){
+    var r=p[i],bits=[];
+    if(i===0)bits.push("时间点 0.000 秒（段首，不写时间戳）");
+    else bits.push("时间点 "+(r.at||"")+" 秒");
+    if(r.cam)bits.push("运镜："+labelOf(SHOT_CAM,r.cam));
+    if(r.dist)bits.push("景别："+r.dist);
+    if(r.who)bits.push("画面主角："+labelOf(SHOT_WHO,r.who));
+    if(i>0&&r.trans)bits.push("从上一镜的转场："+labelOf(SHOT_TRANS,r.trans));
+    if(r.note)bits.push("内容："+String(r.note).trim());
+    out+="[Shot "+(i+1)+"] "+bits.join("；")+"\n";
+  }
+  return out;
+}
+function labelOfDiff(v){
+  var m={s1:"<Subject 1>",s2:"<Subject 2>",s3:"<Subject 3>",multi:"多主体同框",env:"环境为主，画面内无人",pov:"主观视角"};
+  return m[v]||v;
+}
+function lineTextOf(l){return ""+((l&&l.kind==="voiceover")?"画外音":"台词")+"："+String((l&&l.text)||"").trim();}
+function shotPlanWarn(t,segIdx){
+  var p=S.shotPlan||[];if(!p.length)return "";
+  var m=[];var re=/\[Shot\s*(\d+)\]/gi,x,max=0;
+  while((x=re.exec(String(t||"")))){if(+x[1]>max)max=+x[1];}
+  if(!max)return "没识别出任何 [Shot N] 镜头标记，建议点「重试」";
+  if(max<p.length)m.push("只写了 "+max+" 个镜头，镜头表要求 "+p.length+" 个");
+  else if(max>p.length)m.push("写了 "+max+" 个镜头，比镜头表多 "+(max-p.length)+" 个");
+  var i0=parseInt(segIdx,10);if(isNaN(i0))i0=0;
+  var ls=linesForSeg(i0),over=0,i;
+  for(i=0;i<ls.length;i++){
+    var sn=parseInt(ls[i].shot,10)||0;
+    if(sn&&max&&sn>max)over++;
+  }
+  if(over)m.push("有 "+over+" 句台词被指派到不存在的镜头（超出 [Shot "+max+"]）");
+  return m.join("；");
+}
+
+function buildMultiSys(i,dur){
+  var shots=(S.shotPlan&&S.shotPlan.length)?S.shotPlan.length:Math.max(3,Math.round(dur/2.5));
+  var t0=0,k;
+  for(k=0;k<i;k++)t0+=((S.multiSegs[k]&&S.multiSegs[k].dur)||dur);
+  var dls=linesForSeg(i);                       // 只算属于本段的台词
+  var nShot=(S.shotPlan&&S.shotPlan.length)||0;
+  var s="你正在为一条 MiniMax H3 Ref2VA 多段长视频写【第 "+(i+1)+" 段】的提示词。\n"
+    +"成片由若干段接续而成，每段单独生成、单独投喂给视频模型；本段是其中的第 "+(i+1)+" 段，时长 "+dur+" 秒"
+    +(t0?"，对应成片约 "+t0.toFixed(3)+"s 之后的位置":"（开场段）")+"。\n"
+    +"本段必须写成一份【独立完整、可直接使用】的六段式提示词：六个字段一个都不能少，不借助别的段落也能读懂。\n"
+    +"本段有"+(nShot?"【明确的镜头规划："+nShot+" 个镜头，见下方「镜头规划卡」，必须一个不多一个不少地照它写】":"【没有指定镜头表，镜头数由你按本段内容编排】")
+    +"，并且"+(dls.length?"【有 "+dls.length+" 句必须逐字复用的中文台词，见下方「台词锚定卡」，这是硬约束】":"【本段没有指定台词，不要凭空编造任何对白或旁白】")+"。\n\n"
+    +"严格按下列顺序输出，字段名照抄，除此之外不要写标题、序号、解释或代码块围栏：\n\n"
+    +"subject_definitions:\nsummary:\nretention_analysis:\ndetailed_description:\n"
+    +"overall_soundscape:\nnon_diegetic_music:\n\n";
+  s+="语言要求：正文一律用中文书写。但以下记号必须原样保留英文，不得翻译或改写："
+    +"六个字段名 subject_definitions: / summary: / retention_analysis: / detailed_description: / overall_soundscape: / non_diegetic_music:；"
+    +"镜头标记 [Shot N]；段落标记 [Segment N: X.000 - Y.000 seconds]；"
+    +"标签 <Subject N> / <Picture N> / <Video N> / <Audio N>；时间戳 At MM:SS.mmm；"
+    +"台词标签 <d> 与 </d> 以及台词里的语言标记 [Chinese]（台词一律写成 <d>[Chinese] 原文</d>）；"
+    +"保留级别枚举值 fully_preserved / partially_preserved / attribute_transfer / weak_reference。\n\n";
+  s+="字段写法：\n"
+    +"1) subject_definitions：逐条登记本段出现的主体，写成 <Subject N> 为 ……。从 <Subject 1> 起连续编号，不跳号，禁止自造 <Style 1>、<State 1> 这类其它标签族。\n"
+    +"   - 凡是从参考图取出来的主体，必须写明来自哪张图，用 <Picture N> 引用（例：<Subject 1> 为 <Picture 1> 中的女性，发型、面部轮廓与五官与参考图一致）。只写“图中的女性”而不带 <Picture N> 视为不合格。\n"
+    +"   - 只能引用下方列出的素材编号，不得臆造超出范围的 <Picture N>。\n"
+    +"   - 抽象概念也能登记：一种视觉风格、或一个必须贯穿全片的持续状态，都可以成为 Subject，登记后用 retention_analysis 钉住。\n";
+  var wt=wearText();
+  if(wt){
+    s+="   - 【强制开头 · 必须原样照抄，一字不改】本段的 <Subject 1> 这一条必须以这句开头；"
+      +"句末可以追加本段发生的变化说明，但这句本身不得改写、删减或润色，并且每一段都要这样开头：\n"
+      +"---\n"+wt+"\n---\n"
+      +"   - 这句还会被整句搬进 retention_analysis 的 <Subject 1> 行括号里，与这里逐字一致（写法见第 3 条）。\n";
+  }
+  s+="2) summary：以“[reference generation]”开头，一句话讲清本段做什么，并注明它是“第 "+(i+1)+" 段”。\n"
+    +"3) retention_analysis：逐个 <Subject N> 写保留级别（fully_preserved / partially_preserved / attribute_transfer / weak_reference），"
+      +"并写清相对参考图改了什么、从第几镜开始变化并延续到后续镜头。只列 <Subject N>，不要把 <Picture N> 这类原始素材列进去。\n";
+  if(wt){
+    s+="   - 【强制 · 与 subject_definitions 百分百统一】<Subject 1> 这一行必须原样写成下面这一行。"
+      +"括号内就是上面那句锚定句的全文，一个字、一个标点、一处顿号都不许改，不许省略、不许换行、不许概括、不许改写成语义相近的其它说法 —— "
+      +"两处必须完全一致，用同一句话在定义与保留契约两处同时锚定，句子本身永远不变。\n"
+      +"---\n<Subject 1>：fully_preserved（"+wt+"）\n---\n"
+      +"   - 若本段确有这句未涵盖的新变化，只能在这句之后、仍写在括号内追加一句说明，并据此调整保留级别；但这句本身一个字都不许改。\n";
+  }
+  s+="4) detailed_description：先一句贯穿全段的全局设定，再写段落头，再逐镜展开：\n"
+    +"   <一句全局设定：先写场景环境与光线色调基调，再写构图与风格>\n"
+    +"   [Segment 1: 0.000 - "+dur.toFixed(3)+" seconds]\n"
+    +"   [Shot 1] ……\n"
+    +"   [Shot 2] At 00:0X.mmm，……\n"
+    +"   - 段落头固定写成上面那一行 [Segment 1: 0.000 - "+dur.toFixed(3)+" seconds]：本段是独立提示词，只描述这一段，"
+      +"不要改用全片段号（如 [Segment "+(i+1)+"]），也不要用全片绝对秒数，否则段落区间会和镜头时间戳对不上。\n"
+    +"   - 镜头在本段内从 [Shot 1] 起重新编号；第一个镜头不带时间戳，后续镜头用 At MM:SS.mmm，范围 00:00.000–"+fmtT(dur)+"。\n"
+    +((S.shotPlan&&S.shotPlan.length)
+      ? "   - 本段镜头数已固定为 "+S.shotPlan.length+" 个，详见下方「镜头规划卡」，必须严格照写，不得增减或重排。\n"
+      : "   - 本段约写 "+shots+" 个镜头（未指定镜头表，由你按内容与节奏决定）。\n")
+    +"   - 运镜写进句子里（类型 + 幅度 + 速度）。不要写任何解释性文字。\n"
+    +"   - 最后一个镜头必须以一句“定格状态”收尾（姿态、位置、朝向、机位方向），下一段会从这里接续。\n"
+    +"   - 正文中指代主体一律用 <Subject N> 标签，不要写成“她”“这个女人”之类无锚定的说法。\n"
+    +"   - 每个镜头尽量给出：景别、机位方向、主体在画面中的位置、动作的起止状态；镜头之间的过渡用硬切或明确的运动衔接。\n"
+    +"5) overall_soundscape：本段的环境声与动作声。"
+      +"本段若有台词，人声部分一律写成 <d>[Chinese] 原文</d> 的结构句式（<d> 标签与 [Chinese] 语言标记照抄英文，中间才是中文原文），逐句照抄，详见下方「台词锚定卡」。\n"
+    +"6) non_diegetic_music：本段的配乐走向，没有就写 N/A。\n";
+  var ac=anchorCard();
+  if(ac){
+    s+="\n【状态锚定卡 · 贯穿全片，本段必须遵守并落进对应字段】\n"
+      +"以下是本片的既定事实，不是参考建议。按每行括号里的指示，分别落到对应字段里去：\n"
+      +ac+"\n"
+      +"本段若确有变化，只能在既有状态之后追加一句变化说明，不得推翻、删改或重写上述状态。\n"
+      +(wearText()?"若与「强制开头锚定句」冲突，<Subject 1> 的定义句以锚定句为准，状态卡的内容接在其后。\n":"");
+  }
+  if(i===0){
+    s+="\n本段是开场：建立人物、场景与光线基调，并让动作朝下一个状态推进。\n";
+  }else{
+    s+="\n【接戏锚定卡 · 必须遵守】\n"
+      +"上一段已固定的 subject_definitions / summary / retention_analysis 原文如下。"
+      +"本段必须沿用同一套 <Subject N> 编号与定义；只有本段剧情确实改变了的属性，才在 retention_analysis 里声明变化，其余保持 fully_preserved：\n"
+      +"---\n"+(MULTI.anchor||"（无）")+"\n---\n"
+      +"上一段的最后一个镜头（本段从这里无缝接续；不要复述它，直接写下一个动作）：\n---\n"+(MULTI.lastShot||"（无，按剧情自然推进）")+"\n---\n";
+    if(MULTI.lastSound)s+="上一段的声音基调（本段延续并推进，不要另起一套）：\n---\n"+MULTI.lastSound+"\n---\n";
+  }
+  var spc=shotPlanCard();
+  if(spc){
+    s+="\n【镜头规划卡 · 本段必须严格照此写镜头】\n"
+      +"本段共 "+S.shotPlan.length+" 个镜头，编号固定为 [Shot 1]–[Shot "+(S.shotPlan.length)+"]，"
+      +"一个不多、一个不少、不重排、不合并、不改号。时间点与运镜按下面执行；"
+      +"若与内容冲突，以内容自然为准，但镜头数量与先后顺序必须保持。\n"
+      +"---\n"+spc+"---\n";
+    s+="写法：第一个镜头 [Shot 1] 顶格写、不带时间戳；第 2 个起写 [Shot N] At MM:SS.mmm（用上面给的时间点）。"
+      +"运镜写进该镜头的句子里（类型 + 幅度 + 速度），不要单独列成一条。\n";
+    if(S.shotCamBase)s+="全段运镜基调：以「"+S.shotCamBase.replace(/^以/,"").replace(/为主$/,"")+"」为主，个别镜头可偏离但要有理由。\n";
+    if(S.shotTrans)s+="镜头间转场统一使用："+S.shotTrans+"。\n";
+    if(S.shotEnd)s+="末镜收尾要求："+S.shotEnd+"。\n";
+  }
+  var dlg=dialogueBlock(i);
+  if(dlg)s+="\n"+dlg+"\n";
+  s+="\n可用的参考素材文件（素材来源，本身不是 Subject；请在 subject_definitions 里用 <Picture N> 引用）：\n"+picManifest();
+  return s;
+}
+function buildMultiUser(brief,i,dur){
+  var st=i===0?"开场":"承接段";
+  return "整条成片的需求："+brief+"\n\n请写出第 "+(i+1)+" 段（"+dur+" 秒，"+st+"）的完整六段式提示词。";
+}
+function renderMultiList(){
+  var pc=$("multiPicCount");
+  if(pc){var pl=picList();pc.innerHTML="<b>"+pl.length+" 张</b>　"+pl.map(function(x){return x.split("：")[0];}).join("、");}
+  var box=$("multiList");if(!box)return;
+  var segs=S.multiSegs||[],h="",i;
+  for(i=0;i<segs.length;i++){
+    var s=segs[i];
+    var tag=s.st==="done"?"已完成":(s.st==="run"?"生成中…":(s.st==="err"?"失败":"等待"));
+    var col=s.st==="done"?"var(--acc)":(s.st==="err"?"var(--err)":(s.st==="run"?"var(--info)":"var(--tx3)"));
+    var miss=s.st==="done"?missingFields(s.text):[];
+    var shCnt=0;if(s.st==="done"){var rx=/\[Shot\s*(\d+)\]/gi,mm;while((mm=rx.exec(String(s.text||""))))if(+mm[1]>shCnt)shCnt=+mm[1];}
+    h+='<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
+      +'<b>第 '+(i+1)+' 段 · '+s.dur+' 秒</b>'
+      +'<span class="mini">完整六段式</span>'
+      +(s.st==="done"&&shCnt?'<span class="mini">'+shCnt+' 镜</span>':'')
+      +'<span class="mini" style="color:'+col+'">'+tag+'</span>'
+      +'<span style="flex:1"></span>'
+      +'<button class="sm" onclick="copySeg('+i+')">复制</button>'
+      +'<button class="sm" onclick="retrySeg('+i+')">重试</button>'
+      +'<button class="sm" onclick="delSeg('+i+')">删除</button></div>'
+      +(s.warn?'<div class="mini" style="margin-top:6px;color:var(--warn)">'+esc(s.warn)+'</div>':'')
+      +(miss.length?'<div class="mini" style="margin-top:6px;color:var(--warn)">缺少字段：'+miss.join("、")+'</div>':'')
+      +'<textarea rows="14" style="font:12px ui-monospace,Consolas,monospace" oninput="S.multiSegs['+i+'].text=this.value">'+esc(s.text||"")+'</textarea>';
+    if(s.lastShot){
+      h+='<div class="mini" style="margin-top:6px;line-height:1.7"><b>结尾画面</b> '+esc(String(s.lastShot).slice(0,220))+'</div>';
+    }
+    h+='</div>';
+  }
+  if(segs.length>1){
+    h+='<div style="margin-top:10px"><button class="primary" onclick="copyMultiAll()">复制全片（各段独立）</button></div>';
+  }
+  box.innerHTML=h;
+}
+function copySeg(i){cp((S.multiSegs[i]||{}).text||"");flash("已复制第 "+(i+1)+" 段完整六段式");}
+function copyMultiAll(){
+  var t="",segs=S.multiSegs||[],i,t0=0;
+  for(i=0;i<segs.length;i++){
+    var d=segs[i].dur||0;
+    t+="===== 第 "+(i+1)+" 段 · "+d+" 秒（全片 "+t0.toFixed(3)+"s–"+(t0+d).toFixed(3)+"s）=====\n"
+      +String(segs[i].text||"").trim()+"\n\n";
+    t0+=d;
+  }
+  cp(t.trim());
+  flash("已复制全片 "+segs.length+" 段（每段都是完整六段式，可分别投喂）");
+}
+function delSeg(i){
+  if(!confirm("删除第 "+(i+1)+" 段？"))return;
+  S.multiSegs.splice(i,1);
+  renderMultiList();calcSplit();renderLines();
+}
+function stopMulti(){if(MULTI.run){MULTI.stop=true;$("multiInfo").textContent="正在中断…";}}
+function multiDone(msg){
+  MULTI.run=false;MULTI.stop=false;
+  $("multiBtn").disabled=false;$("multiStop").disabled=true;$("multiInfo").textContent=msg;
+}
+function segCount(){return (S.multiSegs||[]).length;}
+function updateMultiStat(msg){
+  var n=segCount(),info=$("multiInfo");
+  if(info)info.textContent=(msg?msg+"　":"")+"已生成 "+n+" 段";
+  var b=$("multiBtn");
+  if(b&&!MULTI.run)b.textContent=(n===0?"生成第 1 段":"生成第 "+(n+1)+" 段");
+}
+function clearSegs(){
+  if(!confirm("清空已生成的全部段落？（需求与设置保留）"))return;
+  S.multiSegs=[];
+  MULTI={run:false,stop:false,brief:"",p:null,anchor:"",lastShot:"",lastSound:""};
+  renderMultiList();calcSplit();renderLines();
+}
+function segAnchor(i){
+  var prev=null,k;
+  for(k=i-1;k>=0;k--){if(S.multiSegs[k]&&S.multiSegs[k].text){prev=S.multiSegs[k];break;}}
+  if(!prev)return {anchor:"",lastShot:"",lastSound:""};
+  return {anchor:prev.head||extractHead(prev.text),lastShot:prev.lastShot||lastShotOf(prev.text),
+          lastSound:soundOf(prev.text)};
+}
+function genNextSeg(){
+  var base=apiBase();
+  if(!base){alert("先在上方填写 llama-server 地址，例如 http://127.0.0.1:8080/v1");return;}
+  if(MULTI.run){alert("正在生成中，请等待或点「中断」");return;}
+  var brief=($("multiBrief").value||"").trim();
+  if(!brief){alert("先写整体需求，比如「女孩在落地窗前跳现代舞」");return;}
+  var dur=segDur(),i=segCount();
+  var a=segAnchor(i);
+  MULTI={run:true,stop:false,brief:brief,p:null,anchor:a.anchor,lastShot:a.lastShot,lastSound:a.lastSound};
+  S.multiBrief=brief;
+  S.multiSegs.push({dur:dur,text:"",head:"",end:"",lastShot:"",st:"wait"});
+  renderMultiList();calcSplit();renderLines();
+  $("multiBtn").disabled=true;$("multiStop").disabled=false;
+  $("multiInfo").textContent="生成第 "+(i+1)+" 段（"+dur+" 秒）…约 40-90 秒";
+  runSeg(i,dur,brief,base);
+}
+function segReq(i,dur,brief,base){
+  return reqJSON(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:DEF_MODEL,messages:[{role:"system",content:buildMultiSys(i,dur)},{role:"user",content:buildMultiUser(brief,i,dur)}],temperature:0.7,max_tokens:8192,reasoning_budget:0})});
+}
+function runSeg(i,dur,brief,base,only){
+  if(MULTI.stop){multiDone("已中断");updateMultiStat("已中断");return;}
+  S.multiSegs[i].st="run";S.multiSegs[i].warn="";renderMultiList();
+  $("multiInfo").textContent="生成第 "+(i+1)+" 段（"+dur+" 秒）…约 40-90 秒";
+  segReq(i,dur,brief,base)
+  .then(function(j){
+    var ps=parseMultiSeg(aiText(j)),g=S.multiSegs[i];
+    ps.text=normSeg(ps.text,g.dur);
+    g.text=ps.text;g.head=extractHead(ps.text);g.lastShot=lastShotOf(ps.text);g.end=ps.end;g.st="done";
+    var w="";
+    if(!ps.has)w="没识别出 detailed_description 字段，输出可能不完整，建议点「重试」";
+    else if(ps.miss.length)w="缺少字段："+ps.miss.join("、")+"　建议点「重试」或手动补上";
+    else if(ps.text.length<200)w="正文过短，多半被思考挤掉了，建议点「重试」";
+    else if(shotStart(ps.text)!==1)w="镜头没有从 [Shot 1] 起编号，可手动改一下";
+    else if(wearMiss(ps.text))w=wearMiss(ps.text);
+    else if(shotPlanWarn(ps.text,i))w=shotPlanWarn(ps.text,i);
+    else if(lineWarn(ps.text,i))w=lineWarn(ps.text,i);
+    if(!w&&(j.usage&&j.usage.completion_tokens>=8150))w="输出接近 token 上限，可能不完整，建议点「重试」或缩短需求";
+    g.warn=w;
+    renderMultiList();calcSplit();renderLines();
+    var n=segCount(),msg;
+    if(only)msg="第 "+(i+1)+" 段已重新生成";
+    else msg="第 "+(i+1)+" 段完成，确认无误后点「生成下一段」";
+    multiDone(msg);
+    updateMultiStat(msg);
+  })
+  .catch(function(e){
+    var g=S.multiSegs[i];g.st="err";g.text="生成失败："+e.message;
+    renderMultiList();
+    multiDone("第 "+(i+1)+" 段失败："+e.message);
+    updateMultiStat("第 "+(i+1)+" 段失败");
+  });
+}
+function retrySeg(i){
+  if(MULTI.run){alert("正在生成中，请先等待或点「中断」");return;}
+  var base=apiBase();
+  if(!base){alert("先在上方填写 llama-server 地址");return;}
+  var brief=($("multiBrief").value||"").trim();
+  if(!brief){alert("需求为空，填一下整体需求");return;}
+  var g=S.multiSegs[i];if(!g)return;
+  var a=segAnchor(i);
+  MULTI={run:true,stop:false,brief:brief,p:null,anchor:a.anchor,lastShot:a.lastShot,lastSound:a.lastSound};
+  $("multiBtn").disabled=true;$("multiStop").disabled=false;
+  runSeg(i,g.dur||segDur(),brief,base,true);
+}
+
+init();
+</script>
+</body>
+</html>
